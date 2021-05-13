@@ -1,0 +1,32 @@
+{
+  "name": "svelte-fsm",
+  "version": "1.0.0",
+  "description": "Tiny, expressive finite state machines for svelte",
+  "type": "module",
+  "main": "index.js",
+  "exports": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kenkunz/svelte-fsm.git"
+  },
+  "keywords": [
+    "svelte",
+    "fsm",
+    "finite",
+    "state",
+    "machine"
+  ],
+  "author": "Ken Kunz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kenkunz/svelte-fsm/issues"
+  },
+  "homepage": "https://github.com/kenkunz/svelte-fsm#README",
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0"
+  }
+}

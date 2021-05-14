@@ -10,15 +10,9 @@ export default function svelteFsm(state, states = {}) {
     return () => subscribers.delete(callback);
   }
 
-  function notifySubscribers() {
-    subscribers.forEach(callback => callback(state));
-  }
-
   function transition(newState) {
-    dispatch('_exit');
     state = newState;
-    notifySubscribers();
-    dispatch('_enter');
+    subscribers.forEach(callback => callback(state));
   }
 
   function dispatch(event, ...args) {
@@ -26,10 +20,12 @@ export default function svelteFsm(state, states = {}) {
     return (value instanceof Function) ? value(...args) : value;
   }
 
-  function handle(event, ...args) {
-    const newState = dispatch(event, ...args);
+  async function handle(event, ...args) {
+    const newState = await dispatch(event, ...args);
     if (newState !== undefined && newState !== state) {
+      await dispatch('_exit');
       transition(newState);
+      await dispatch('_enter');
     }
   }
 

@@ -116,6 +116,12 @@ describe('a finite state machine', () => {
       assert.equal('on', callback.secondCall.args[0]);
     });
 
+    it('should not notify subscribers when state unchanged', () => {
+      kick.returns('off');
+      fsm.handle('kick');
+      assert.isTrue(callback.calledOnce);
+    });
+
     it('should not throw error when no matching state node', () => {
       fsm.handle('surge');
       assert.equal('blown', callback.secondCall.args[0]);

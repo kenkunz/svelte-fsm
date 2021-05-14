@@ -22,7 +22,7 @@ export default function svelteFsm(state, states = {}) {
 
   function handle(event, ...args) {
     let newState = dispatch(event, ...args);
-    if (newState !== undefined) {
+    if (newState !== undefined && newState !== state) {
       transition(newState);
     }
   }

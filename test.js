@@ -7,7 +7,7 @@ describe('a finite state machine', () => {
   let kick;
 
   beforeEach(() => {
-    kick = sinon.spy();
+    kick = sinon.stub();
 
     fsm = svelteFsm('off', {
       off: {
@@ -86,9 +86,22 @@ describe('a finite state machine', () => {
       assert.isTrue(callback.calledOnce);
     });
 
-    it('should invoke a function registered to event', () => {
+    it('should invoke event handler function', () => {
       fsm.handle('kick');
       assert.isTrue(kick.calledOnce);
+    });
+
+    it('should not transition if nothing returned from event handler', () => {
+      fsm.handle('kick');
+      assert.isTrue(callback.calledOnce);
+      assert.equal('off', callback.firstCall.args[0]);
+    });
+
+    it('should transition to event handler return value', () => {
+      kick.returns('on');
+      fsm.handle('kick');
+      assert.isTrue(callback.calledTwice);
+      assert.equal('on', callback.secondCall.args[0]);
     });
 
     it('should not throw error when no matching state node', () => {

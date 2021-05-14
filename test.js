@@ -66,15 +66,24 @@ describe('a finite state machine', () => {
       unsubscribe = fsm.subscribe(callback);
     });
 
+    afterEach(() => {
+      unsubscribe();
+    });
+
+    it('should invoke callback on initial subscribe', () => {
+      assert.isTrue(callback.calledOnce);
+      assert.equal('off', callback.firstCall.args[0]);
+    });
+
     it('should transition to static value registered to event', () => {
       fsm.handle('toggle');
-      assert.isTrue(callback.calledOnce);
-      assert.equal('on', callback.firstCall.args[0]);
+      assert.isTrue(callback.calledTwice);
+      assert.equal('on', callback.secondCall.args[0]);
     });
 
     it('should silently handle unregistered event', () => {
       fsm.handle('noop');
-      assert.isTrue(callback.notCalled);
+      assert.isTrue(callback.calledOnce);
     });
 
     it('should invoke a function registered to event', () => {
@@ -84,14 +93,14 @@ describe('a finite state machine', () => {
 
     it('should not throw error when no matching state node', () => {
       fsm.handle('surge');
-      assert.equal('blown', callback.firstCall.args[0]);
+      assert.equal('blown', callback.secondCall.args[0]);
       assert.doesNotThrow(() => fsm.handle('toggle'));
     });
 
     it('should stop notifying after unsubscribe', () => {
       unsubscribe();
       fsm.handle('toggle');
-      assert.isTrue(callback.notCalled);
+      assert.isTrue(callback.calledOnce);
     });
   });
 });

@@ -2,14 +2,14 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import svelteFsm from './index.js';
 
-describe('a simple state machine', () => {
-  let simpleMachine;
+describe('a finite state machine', () => {
+  let fsm;
   let kick;
 
   beforeEach(() => {
     kick = sinon.spy();
 
-    simpleMachine = svelteFsm('off', {
+    fsm = svelteFsm('off', {
       off: {
         toggle: 'on',
         surge: 'blown',
@@ -26,34 +26,34 @@ describe('a simple state machine', () => {
   });
 
   it('provides a subscribe function', () => {
-    assert.isFunction(simpleMachine.subscribe);
+    assert.isFunction(fsm.subscribe);
   });
 
   it('provides a handle function', () => {
-    assert.isFunction(simpleMachine.handle);
+    assert.isFunction(fsm.handle);
   });
 
   describe('subscribe function', () => {
     it('accepts a callback function', () => {
       assert.doesNotThrow(() => {
-        simpleMachine.subscribe(sinon.fake());
+        fsm.subscribe(sinon.fake());
       });
     });
 
     it('throws TypeError if no callback provided', () => {
       assert.throws(() => {
-        simpleMachine.subscribe();
+        fsm.subscribe();
       }, TypeError);
     });
 
     it('throws TypeError if callback is not a function', () => {
       assert.throws(() => {
-        simpleMachine.subscribe('please call me back');
+        fsm.subscribe('please call me back');
       }, TypeError);
     });
 
     it('returns unsubscribe function', () => {
-      assert.isFunction(simpleMachine.subscribe(sinon.fake()));
+      assert.isFunction(fsm.subscribe(sinon.fake()));
     });
   });
 
@@ -63,34 +63,34 @@ describe('a simple state machine', () => {
 
     beforeEach(() => {
       callback = sinon.spy();
-      unsubscribe = simpleMachine.subscribe(callback);
+      unsubscribe = fsm.subscribe(callback);
     });
 
     it('should transition to static value registered to event', () => {
-      simpleMachine.handle('toggle');
+      fsm.handle('toggle');
       assert.isTrue(callback.calledOnce);
       assert.equal('on', callback.firstCall.args[0]);
     });
 
     it('should silently handle unregistered event', () => {
-      simpleMachine.handle('noop');
+      fsm.handle('noop');
       assert.isTrue(callback.notCalled);
     });
 
     it('should invoke a function registered to event', () => {
-      simpleMachine.handle('kick');
+      fsm.handle('kick');
       assert.isTrue(kick.calledOnce);
     });
 
     it('should not throw error when no matching state node', () => {
-      simpleMachine.handle('surge');
+      fsm.handle('surge');
       assert.equal('blown', callback.firstCall.args[0]);
-      assert.doesNotThrow(() => simpleMachine.handle('toggle'));
+      assert.doesNotThrow(() => fsm.handle('toggle'));
     });
 
     it('should stop notifying after unsubscribe', () => {
       unsubscribe();
-      simpleMachine.handle('toggle');
+      fsm.handle('toggle');
       assert.isTrue(callback.notCalled);
     });
   });

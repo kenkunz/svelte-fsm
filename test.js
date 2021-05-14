@@ -4,12 +4,16 @@ import svelteFsm from './index.js';
 
 describe('a simple state machine', () => {
   let simpleMachine;
+  let kick;
 
   beforeEach(() => {
+    kick = sinon.spy();
+
     simpleMachine = svelteFsm('off', {
       off: {
         toggle: 'on',
-        surge: 'blown'
+        surge: 'blown',
+        kick
       },
       on: {
         toggle: 'off'
@@ -53,7 +57,7 @@ describe('a simple state machine', () => {
     });
   });
 
-  describe('subscribed callback', () => {
+  describe('with a subscribed callback', () => {
     let callback;
     let unsubscribe;
 
@@ -62,15 +66,20 @@ describe('a simple state machine', () => {
       unsubscribe = simpleMachine.subscribe(callback);
     });
 
-    it('should be invoked with new state on state change', () => {
+    it('should transition to static value registered to event', () => {
       simpleMachine.handle('toggle');
       assert.isTrue(callback.calledOnce);
       assert.equal('on', callback.firstCall.args[0]);
     });
 
-    it('should not be invoked when no matching event', () => {
+    it('should silently handle unregistered event', () => {
       simpleMachine.handle('noop');
       assert.isTrue(callback.notCalled);
+    });
+
+    it('should invoke a function registered to event', () => {
+      simpleMachine.handle('kick');
+      assert.isTrue(kick.calledOnce);
     });
 
     it('should not throw error when no matching state node', () => {
@@ -79,7 +88,7 @@ describe('a simple state machine', () => {
       assert.doesNotThrow(() => simpleMachine.handle('toggle'));
     });
 
-    it('should not be invoked once unsubscribed', () => {
+    it('should stop notifying after unsubscribe', () => {
       unsubscribe();
       simpleMachine.handle('toggle');
       assert.isTrue(callback.notCalled);

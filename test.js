@@ -104,6 +104,18 @@ describe('a finite state machine', () => {
       assert.equal('on', callback.secondCall.args[0]);
     });
 
+    it('should pass through args to event handler', () => {
+      kick.withArgs('hard').returns('on');
+
+      fsm.handle('kick');
+      assert.isTrue(callback.calledOnce);
+      assert.equal('off', callback.firstCall.args[0]);
+
+      fsm.handle('kick', 'hard');
+      assert.isTrue(callback.calledTwice);
+      assert.equal('on', callback.secondCall.args[0]);
+    });
+
     it('should not throw error when no matching state node', () => {
       fsm.handle('surge');
       assert.equal('blown', callback.secondCall.args[0]);

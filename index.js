@@ -15,13 +15,13 @@ export default function svelteFsm(state, states = {}) {
     subscribers.forEach(callback => callback(state));
   }
 
-  function dispatch(event) {
+  function dispatch(event, ...args) {
     const value = states[state]?.[event];
-    return (value instanceof Function) ? value() : value;
+    return (value instanceof Function) ? value(...args) : value;
   }
 
-  function handle(event) {
-    let newState = dispatch(event);
+  function handle(event, ...args) {
+    let newState = dispatch(event, ...args);
     if (newState !== undefined) {
       transition(newState);
     }

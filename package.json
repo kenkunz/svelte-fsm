@@ -5,6 +5,7 @@
   "type": "module",
   "main": "index.js",
   "exports": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "mocha"
   },

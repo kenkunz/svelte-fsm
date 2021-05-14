@@ -25,34 +25,34 @@ describe('a finite state machine', () => {
     sinon.restore();
   });
 
-  it('provides a subscribe function', () => {
+  it('should provide a subscribe function', () => {
     assert.isFunction(fsm.subscribe);
   });
 
-  it('provides a handle function', () => {
+  it('should provide a handle function', () => {
     assert.isFunction(fsm.handle);
   });
 
   describe('subscribe function', () => {
-    it('accepts a callback function', () => {
+    it('should accept a callback function', () => {
       assert.doesNotThrow(() => {
         fsm.subscribe(sinon.fake());
       });
     });
 
-    it('throws TypeError if no callback provided', () => {
+    it('should throw TypeError if no callback provided', () => {
       assert.throws(() => {
         fsm.subscribe();
       }, TypeError);
     });
 
-    it('throws TypeError if callback is not a function', () => {
+    it('should throw TypeError if callback is not a function', () => {
       assert.throws(() => {
         fsm.subscribe('please call me back');
       }, TypeError);
     });
 
-    it('returns unsubscribe function', () => {
+    it('should return unsubscribe function', () => {
       assert.isFunction(fsm.subscribe(sinon.fake()));
     });
   });

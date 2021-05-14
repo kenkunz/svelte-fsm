@@ -3,20 +3,22 @@ import sinon from 'sinon';
 import svelteFsm from './index.js';
 
 describe('a finite state machine', () => {
-  let fsm;
-  let kick;
+  let fsm, kick, sequenceSpy;
 
   beforeEach(() => {
     kick = sinon.stub();
+    sequenceSpy = sinon.spy();
 
     fsm = svelteFsm('off', {
       off: {
         toggle: 'on',
         surge: 'blown',
-        kick
+        kick,
+        _exit() { sequenceSpy('off:_exit'); }
       },
       on: {
-        toggle: 'off'
+        toggle: 'off',
+        _enter() { sequenceSpy('on:_enter'); }
       }
     });
   });
@@ -62,7 +64,7 @@ describe('a finite state machine', () => {
     let unsubscribe;
 
     beforeEach(() => {
-      callback = sinon.spy();
+      callback = sinon.stub();
       unsubscribe = fsm.subscribe(callback);
     });
 
@@ -120,6 +122,15 @@ describe('a finite state machine', () => {
       kick.returns('off');
       fsm.handle('kick');
       assert.isTrue(callback.calledOnce);
+    });
+
+    it('should call _exit and _enter handlers in proper sequence', () => {
+      callback.callsFake(sequenceSpy);
+      fsm.handle('toggle');
+      assert.isTrue(sequenceSpy.calledThrice);
+      assert.equal('off:_exit', sequenceSpy.firstCall.args[0]);
+      assert.equal('on', sequenceSpy.secondCall.args[0]);
+      assert.equal('on:_enter', sequenceSpy.thirdCall.args[0]);
     });
 
     it('should not throw error when no matching state node', () => {

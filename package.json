@@ -27,6 +27,7 @@
   "homepage": "https://github.com/kenkunz/svelte-fsm#README",
   "devDependencies": {
     "chai": "^4.3.4",
-    "mocha": "^8.4.0"
+    "mocha": "^8.4.0",
+    "sinon": "^10.0.0"
   }
 }

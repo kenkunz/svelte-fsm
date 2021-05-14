@@ -47,14 +47,19 @@ describe('a simple state machine', () => {
         simpleMachine.subscribe('please call me back');
       }, TypeError);
     });
+
+    it('returns unsubscribe function', () => {
+      assert.isFunction(simpleMachine.subscribe(sinon.fake()));
+    });
   });
 
   describe('subscribed callback', () => {
     let callback;
+    let unsubscribe;
 
     beforeEach(() => {
       callback = sinon.spy();
-      simpleMachine.subscribe(callback);
+      unsubscribe = simpleMachine.subscribe(callback);
     });
 
     it('should be invoked with new state on state change', () => {
@@ -70,11 +75,14 @@ describe('a simple state machine', () => {
 
     it('should not throw error when no matching state node', () => {
       simpleMachine.handle('surge');
-      assert.isTrue(callback.calledOnce);
       assert.equal('blown', callback.firstCall.args[0]);
-      assert.doesNotThrow(() => {
-        simpleMachine.handle('toggle');
-      });
+      assert.doesNotThrow(() => simpleMachine.handle('toggle'));
+    });
+
+    it('should not be invoked once unsubscribed', () => {
+      unsubscribe();
+      simpleMachine.handle('toggle');
+      assert.isTrue(callback.notCalled);
     });
   });
 });

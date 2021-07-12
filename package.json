@@ -1,10 +1,13 @@
 {
   "name": "svelte-fsm",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "Tiny, expressive finite state machines for svelte",
   "type": "module",
-  "main": "index.js",
-  "exports": "index.js",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
   "types": "index.d.ts",
   "scripts": {
     "test": "mocha"

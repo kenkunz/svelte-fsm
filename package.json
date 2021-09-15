@@ -1,6 +1,6 @@
 {
   "name": "svelte-fsm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Tiny, expressive finite state machines for svelte",
   "type": "module",
   "main": "./index.js",
@@ -31,7 +31,7 @@
   "homepage": "https://github.com/kenkunz/svelte-fsm#README",
   "devDependencies": {
     "chai": "^4.3.4",
-    "mocha": "^8.4.0",
-    "sinon": "^10.0.0"
+    "mocha": "^9.1.1",
+    "sinon": "^11.1.2"
   }
 }

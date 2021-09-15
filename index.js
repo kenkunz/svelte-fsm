@@ -1,6 +1,14 @@
 export default function svelteFsm(state, states = {}) {
   const subscribers = new Set();
 
+  function subscribeOrHandle(...args) {
+    if (args.length === 1 && args[0] instanceof Function) {
+      return subscribe(args[0]);
+    } else {
+      handle('subscribe', ...args);
+    }
+  }
+
   function subscribe(callback) {
     subscribers.add(callback);
     callback(state);
@@ -26,17 +34,9 @@ export default function svelteFsm(state, states = {}) {
     }
   }
 
-  const fsm = { subscribe };
-
-  const handler = {
-    get: function (target, property, receiver) {
-      if (Reflect.has(target, property)) {
-        return Reflect.get(target, property, receiver);
-      } else {
-        return handle.bind(null, property);
-      }
+  return new Proxy({}, {
+    get(target, property) {
+      return (property === 'subscribe') ? subscribeOrHandle : handle.bind(null, property);
     }
-  };
-
-  return new Proxy(fsm, handler);
+  });
 }

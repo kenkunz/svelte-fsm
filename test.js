@@ -3,17 +3,19 @@ import sinon from 'sinon';
 import svelteFsm from './index.js';
 
 describe('a finite state machine', () => {
-  let fsm, kick, sequenceSpy;
+  let fsm, kickHandler, subscribeHandler, sequenceSpy;
 
   beforeEach(() => {
-    kick = sinon.stub();
-    sequenceSpy = sinon.spy();
+    kickHandler = sinon.stub();
+    subscribeHandler = sinon.stub();
+    sequenceSpy = sinon.stub();
 
     fsm = svelteFsm('off', {
       off: {
         toggle: 'on',
         surge: 'blown',
-        kick,
+        kick: kickHandler,
+        subscribe: subscribeHandler,
         async toggleEventually() {
           return 'on';
         },
@@ -42,35 +44,37 @@ describe('a finite state machine', () => {
     sinon.restore();
   });
 
-  it('should provide a subscribe function', () => {
-    assert.isFunction(fsm.subscribe);
-  });
-
-  it('should provide a handle function', () => {
-    assert.isFunction(fsm.handle);
-  });
-
   describe('subscribe function', () => {
-    it('should accept a callback function', () => {
+    it('should accept single argument callback function', () => {
       assert.doesNotThrow(() => {
         fsm.subscribe(sinon.fake());
       });
     });
 
-    it('should throw TypeError if no callback provided', () => {
-      assert.throws(() => {
-        fsm.subscribe();
-      }, TypeError);
-    });
-
-    it('should throw TypeError if callback is not a function', () => {
-      assert.throws(() => {
-        fsm.subscribe('please call me back');
-      }, TypeError);
-    });
-
-    it('should return unsubscribe function', () => {
+    it('should return unsubscribe function when invoked with callback', () => {
       assert.isFunction(fsm.subscribe(sinon.fake()));
+    });
+
+    it('should call subscribe handler when invoked with no args', () => {
+      fsm.subscribe();
+      assert.isTrue(subscribeHandler.calledOnce);
+      assert.isEmpty(subscribeHandler.firstCall.args);
+    });
+
+    it('should call subscribe handler when invoked with single non-function arg', () => {
+      fsm.subscribe('not a function');
+      assert.isTrue(subscribeHandler.calledOnce);
+      assert.lengthOf(subscribeHandler.firstCall.args, 1);
+      assert.equal('not a function', subscribeHandler.firstCall.args[0]);
+    });
+
+    it('should call subscribe handler when invoked with multiple args', () => {
+      const fn = sinon.fake()
+      fsm.subscribe(fn, null);
+      assert.isTrue(subscribeHandler.calledOnce);
+      assert.lengthOf(subscribeHandler.firstCall.args, 2);
+      assert.equal(fn, subscribeHandler.firstCall.args[0]);
+      assert.isNull(subscribeHandler.firstCall.args[1]);
     });
   });
 
@@ -105,7 +109,7 @@ describe('a finite state machine', () => {
 
     it('should invoke event handler function', async () => {
       await fsm.kick();
-      assert.isTrue(kick.calledOnce);
+      assert.isTrue(kickHandler.calledOnce);
     });
 
     it('should not transition if nothing returned from event handler', async () => {
@@ -115,7 +119,7 @@ describe('a finite state machine', () => {
     });
 
     it('should transition to event handler return value', async () => {
-      kick.returns('on');
+      kickHandler.returns('on');
       await fsm.kick();
       assert.isTrue(callback.calledTwice);
       assert.equal('on', callback.secondCall.args[0]);
@@ -128,7 +132,7 @@ describe('a finite state machine', () => {
     });
 
     it('should pass through args to event handler', async () => {
-      kick.withArgs('hard').returns('on');
+      kickHandler.withArgs('hard').returns('on');
 
       await fsm.kick();
       assert.isTrue(callback.calledOnce);
@@ -140,7 +144,7 @@ describe('a finite state machine', () => {
     });
 
     it('should not notify subscribers when state unchanged', async () => {
-      kick.returns('off');
+      kickHandler.returns('off');
       await fsm.kick();
       assert.isTrue(callback.calledOnce);
     });

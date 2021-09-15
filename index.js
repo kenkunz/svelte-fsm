@@ -2,9 +2,6 @@ export default function svelteFsm(state, states = {}) {
   const subscribers = new Set();
 
   function subscribe(callback) {
-    if (!(callback instanceof Function)) {
-      throw new TypeError('callback is not a function');
-    }
     subscribers.add(callback);
     callback(state);
     return () => subscribers.delete(callback);

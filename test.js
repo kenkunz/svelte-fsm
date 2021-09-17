@@ -29,12 +29,8 @@ describe('a finite state machine', () => {
           sequenceSpy('on:_enter');
         },
         async _exit() {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              sequenceSpy('on:_exit');
-              resolve();
-            });
-          });
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          sequenceSpy('on:_exit');
         }
       }
     });
@@ -96,88 +92,161 @@ describe('a finite state machine', () => {
       assert.equal('off', callback.firstCall.args[0]);
     });
 
-    it('should transition to static value registered to event', async () => {
-      await fsm.toggle();
-      assert.isTrue(callback.calledTwice);
-      assert.equal('on', callback.secondCall.args[0]);
+    describe('invoking an event method', function() {
+      it('should transition to static value registered to event', async () => {
+        await fsm.toggle();
+        assert.isTrue(callback.calledTwice);
+        assert.equal('on', callback.secondCall.args[0]);
+      });
+
+      it('should silently handle unregistered event', async () => {
+        await fsm.noop();
+        assert.isTrue(callback.calledOnce);
+      });
+
+      it('should invoke event handler function', async () => {
+        await fsm.kick();
+        assert.isTrue(kickHandler.calledOnce);
+      });
+
+      it('should not transition if nothing returned from event handler', async () => {
+        await fsm.kick();
+        assert.isTrue(callback.calledOnce);
+        assert.equal('off', callback.firstCall.args[0]);
+      });
+
+      it('should transition to event handler return value', async () => {
+        kickHandler.returns('on');
+        await fsm.kick();
+        assert.isTrue(callback.calledTwice);
+        assert.equal('on', callback.secondCall.args[0]);
+      });
+
+      it('should support async event handlers', async () => {
+        await fsm.toggleEventually();
+        assert.isTrue(callback.calledTwice);
+        assert.equal('on', callback.secondCall.args[0]);
+      });
+
+      it('should pass through args to event handler', async () => {
+        kickHandler.withArgs('hard').returns('on');
+
+        await fsm.kick();
+        assert.isTrue(callback.calledOnce);
+        assert.equal('off', callback.firstCall.args[0]);
+
+        await fsm.kick('hard');
+        assert.isTrue(callback.calledTwice);
+        assert.equal('on', callback.secondCall.args[0]);
+      });
+
+      it('should not notify subscribers when state unchanged', async () => {
+        kickHandler.returns('off');
+        await fsm.kick();
+        assert.isTrue(callback.calledOnce);
+      });
+
+      it('should call _exit and _enter handlers in proper sequence', async () => {
+        callback.callsFake(sequenceSpy);
+        await fsm.toggle();
+        assert.isTrue(sequenceSpy.calledThrice);
+        assert.equal('off:_exit', sequenceSpy.firstCall.args[0]);
+        assert.equal('on', sequenceSpy.secondCall.args[0]);
+        assert.equal('on:_enter', sequenceSpy.thirdCall.args[0]);
+      });
+
+      it('should support async _exit and _enter handlers', async () => {
+        callback.callsFake(sequenceSpy);
+        await fsm.toggle(); // toggle off
+        await fsm.toggle(); // toggle on
+        assert.equal(5, sequenceSpy.callCount);
+        assert.equal('on:_exit', sequenceSpy.getCall(3).args[0]);
+        assert.equal('off', sequenceSpy.getCall(4).args[0]);
+      });
+
+      it('should not throw error when no matching state node', async () => {
+        await fsm.surge();
+        assert.isTrue(callback.calledTwice);
+        assert.equal('blown', callback.secondCall.args[0]);
+        assert.doesNotThrow(() => fsm.toggle());
+      });
+
+      it('should stop notifying after unsubscribe', async () => {
+        unsubscribe();
+        await fsm.toggle();
+        assert.isTrue(callback.calledOnce);
+      });  
     });
 
-    it('should silently handle unregistered event', async () => {
-      await fsm.noop();
-      assert.isTrue(callback.calledOnce);
-    });
+    describe('event hadnlers’ debounce property', () => {
+      it('should be a function', () => {
+        assert.isFunction(fsm.someEvent.debounce);
+      });
 
-    it('should invoke event handler function', async () => {
-      await fsm.kick();
-      assert.isTrue(kickHandler.calledOnce);
-    });
+      it('should return a function', async () => {
+        assert.isFunction(fsm.someEvent.debounce());
+      });
 
-    it('should not transition if nothing returned from event handler', async () => {
-      await fsm.kick();
-      assert.isTrue(callback.calledOnce);
-      assert.equal('off', callback.firstCall.args[0]);
-    });
+      describe('invoking returned debounce function', () => {
+        let clock;
 
-    it('should transition to event handler return value', async () => {
-      kickHandler.returns('on');
-      await fsm.kick();
-      assert.isTrue(callback.calledTwice);
-      assert.equal('on', callback.secondCall.args[0]);
-    });
+        beforeEach(() => {
+          clock = sinon.useFakeTimers();
+        });
 
-    it('should support async event handlers', async () => {
-      await fsm.toggleEventually();
-      assert.isTrue(callback.calledTwice);
-      assert.equal('on', callback.secondCall.args[0]);
-    });
+        afterEach(() => {
+          clock.restore();
+        });
 
-    it('should pass through args to event handler', async () => {
-      kickHandler.withArgs('hard').returns('on');
+        it('should invoke event after specified wait time', async () => {
+          const debouncedKick = fsm.kick.debounce(100)();
+          clock.tick(100);
+          await debouncedKick;
+          assert.isTrue(kickHandler.calledOnce);
+        });
 
-      await fsm.kick();
-      assert.isTrue(callback.calledOnce);
-      assert.equal('off', callback.firstCall.args[0]);
+        it('should pass arguments through to handler', async () => {
+          const debouncedKick = fsm.kick.debounce(100)('hard');
+          clock.tick(100);
+          await debouncedKick;
+          assert.isTrue(kickHandler.calledOnce);
+          assert.equal('hard', kickHandler.firstCall.args[0]);
+        });
 
-      await fsm.kick('hard');
-      assert.isTrue(callback.calledTwice);
-      assert.equal('on', callback.secondCall.args[0]);
-    });
+        it('should support async _exit and _enter handlers', async () => {
+          // NOTE: fake timers don't work due to nested async setTimeout calls
+          // using short debounce wait with real timers instead
+          clock.restore();
+          callback.callsFake(sequenceSpy);
+          await fsm.toggle.debounce(1)(); // toggle off
+          await fsm.toggle.debounce(1)(); // toggle on
+          assert.equal(5, sequenceSpy.callCount);
+          assert.equal('on:_exit', sequenceSpy.getCall(3).args[0]);
+          assert.equal('off', sequenceSpy.getCall(4).args[0]);
+        });
 
-    it('should not notify subscribers when state unchanged', async () => {
-      kickHandler.returns('off');
-      await fsm.kick();
-      assert.isTrue(callback.calledOnce);
-    });
+        it('should debounce multiple calls within wait time', async () => {
+          const firstKick = fsm.kick.debounce(100)(1);
+          clock.tick(50);
+          const secondKick = fsm.kick.debounce(100)(2);
+          clock.tick(50);
+          assert.isTrue(kickHandler.notCalled);
+          clock.tick(50);
+          await secondKick;
+          assert.isTrue(kickHandler.calledOnce);
+          assert.equal(2, kickHandler.firstCall.args[0]);
+        });
 
-    it('should call _exit and _enter handlers in proper sequence', async () => {
-      callback.callsFake(sequenceSpy);
-      await fsm.toggle();
-      assert.isTrue(sequenceSpy.calledThrice);
-      assert.equal('off:_exit', sequenceSpy.firstCall.args[0]);
-      assert.equal('on', sequenceSpy.secondCall.args[0]);
-      assert.equal('on:_enter', sequenceSpy.thirdCall.args[0]);
-    });
-
-    it('should support async _exit and _enter handlers', async () => {
-      callback.callsFake(sequenceSpy);
-      await fsm.toggle(); // toggle off
-      await fsm.toggle(); // toggle on
-      assert.equal(5, sequenceSpy.callCount);
-      assert.equal('on:_exit', sequenceSpy.getCall(3).args[0]);
-      assert.equal('off', sequenceSpy.getCall(4).args[0]);
-    });
-
-    it('should not throw error when no matching state node', async () => {
-      await fsm.surge();
-      assert.isTrue(callback.calledTwice);
-      assert.equal('blown', callback.secondCall.args[0]);
-      assert.doesNotThrow(() => fsm.handle('toggle'));
-    });
-
-    it('should stop notifying after unsubscribe', async () => {
-      unsubscribe();
-      await fsm.handle('toggle');
-      assert.isTrue(callback.calledOnce);
+        it('should invoke event after last call’s wait time', async () => {
+          const firstKick = fsm.kick.debounce(100)(1);
+          clock.tick(50);
+          const secondKick = fsm.kick.debounce(10)(2);
+          clock.tick(10);
+          await secondKick;
+          assert.isTrue(kickHandler.calledOnce);
+          assert.equal(2, kickHandler.firstCall.args[0]);
+        });
+      });
     });
   });
 });

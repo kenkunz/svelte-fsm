@@ -34,6 +34,8 @@ export default function svelteFsm(state, states = {}) {
     }
   }
 
+  dispatch('_init');
+
   /*
    * Debounce functionality
    * - debouncer methed is bound to dynamic event invoker methods (see Proxy section below)

@@ -12,6 +12,9 @@ describe('a finite state machine', () => {
 
     fsm = svelteFsm('off', {
       off: {
+        _init() {
+          sequenceSpy('off:_init');
+        },
         toggle: 'on',
         surge: 'blown',
         kick: kickHandler,
@@ -24,10 +27,13 @@ describe('a finite state machine', () => {
         }
       },
       on: {
-        toggle: 'off',
+        _init() {
+          sequenceSpy('off:_init');
+        },
         _enter() {
           sequenceSpy('on:_enter');
         },
+        toggle: 'off',
         async _exit() {
           await new Promise((resolve) => setTimeout(resolve, 0));
           sequenceSpy('on:_exit');
@@ -146,22 +152,23 @@ describe('a finite state machine', () => {
         assert.isTrue(callback.calledOnce);
       });
 
-      it('should call _exit and _enter handlers in proper sequence', async () => {
+      it('should call lifecycle handlers in proper sequence', async () => {
         callback.callsFake(sequenceSpy);
         await fsm.toggle();
-        assert.isTrue(sequenceSpy.calledThrice);
-        assert.equal('off:_exit', sequenceSpy.firstCall.args[0]);
-        assert.equal('on', sequenceSpy.secondCall.args[0]);
-        assert.equal('on:_enter', sequenceSpy.thirdCall.args[0]);
+        assert.equal(4, sequenceSpy.callCount);
+        assert.equal('off:_init', sequenceSpy.firstCall.args[0]);
+        assert.equal('off:_exit', sequenceSpy.secondCall.args[0]);
+        assert.equal('on', sequenceSpy.thirdCall.args[0]);
+        assert.equal('on:_enter', sequenceSpy.getCall(3).args[0]);
       });
 
       it('should support async _exit and _enter handlers', async () => {
         callback.callsFake(sequenceSpy);
         await fsm.toggle(); // toggle off
         await fsm.toggle(); // toggle on
-        assert.equal(5, sequenceSpy.callCount);
-        assert.equal('on:_exit', sequenceSpy.getCall(3).args[0]);
-        assert.equal('off', sequenceSpy.getCall(4).args[0]);
+        assert.equal(6, sequenceSpy.callCount);
+        assert.equal('on:_exit', sequenceSpy.getCall(4).args[0]);
+        assert.equal('off', sequenceSpy.getCall(5).args[0]);
       });
 
       it('should not throw error when no matching state node', async () => {
@@ -220,9 +227,9 @@ describe('a finite state machine', () => {
           callback.callsFake(sequenceSpy);
           await fsm.toggle.debounce(1)(); // toggle off
           await fsm.toggle.debounce(1)(); // toggle on
-          assert.equal(5, sequenceSpy.callCount);
-          assert.equal('on:_exit', sequenceSpy.getCall(3).args[0]);
-          assert.equal('off', sequenceSpy.getCall(4).args[0]);
+          assert.equal(6, sequenceSpy.callCount);
+          assert.equal('on:_exit', sequenceSpy.getCall(4).args[0]);
+          assert.equal('off', sequenceSpy.getCall(5).args[0]);
         });
 
         it('should debounce multiple calls within wait time', async () => {

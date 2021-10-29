@@ -31,6 +31,7 @@ export default function svelteFsm(state, states = {}) {
     if (newState !== undefined && newState !== state) {
       transition(newState);
     }
+    return state;
   }
 
   dispatch('_init');

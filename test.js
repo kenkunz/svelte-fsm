@@ -120,6 +120,10 @@ describe('a finite state machine', () => {
       assert.equal('on', callback.secondCall.args[0]);
     });
 
+    it('should return resulting state', () => {
+      assert.equal('on', fsm.toggle());
+    });
+
     it('should pass through args to event handler', () => {
       kickHandler.withArgs('hard').returns('on');
 

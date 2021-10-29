@@ -1,8 +1,7 @@
 export default function svelteFsm(state, states = {}) {
   /*
    * Core Finite State Machine functionality
-   * - adheres to Svelte store contract (subscribe method subscribes and returns unsubscribe;
-   *   store publishes state changes to subscribers)
+   * - adheres to Svelte store contract (https://svelte.dev/docs#Store_contract)
    * - invoked events are dispatched to handler of current state
    * - transitions to returned state (or value if static property)
    * - calls _exit() and _enter() methods if they are defined on exited/entered state
@@ -16,8 +15,10 @@ export default function svelteFsm(state, states = {}) {
   }
 
   function transition(newState) {
+    dispatch('_exit');
     state = newState;
     subscribers.forEach((callback) => callback(state));
+    dispatch('_enter');
   }
 
   function dispatch(event, ...args) {
@@ -25,12 +26,10 @@ export default function svelteFsm(state, states = {}) {
     return value instanceof Function ? value(...args) : value;
   }
 
-  async function invoke(event, ...args) {
-    const newState = await dispatch(event, ...args);
+  function invoke(event, ...args) {
+    const newState = dispatch(event, ...args);
     if (newState !== undefined && newState !== state) {
-      await dispatch('_exit');
       transition(newState);
-      await dispatch('_enter');
     }
   }
 

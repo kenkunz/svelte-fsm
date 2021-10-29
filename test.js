@@ -19,25 +19,15 @@ describe('a finite state machine', () => {
         surge: 'blown',
         kick: kickHandler,
         subscribe: subscribeHandler,
-        async toggleEventually() {
-          return 'on';
-        },
         _exit() {
           sequenceSpy('off:_exit');
         }
       },
       on: {
-        _init() {
-          sequenceSpy('off:_init');
-        },
         _enter() {
           sequenceSpy('on:_enter');
         },
-        toggle: 'off',
-        async _exit() {
-          await new Promise((resolve) => setTimeout(resolve, 0));
-          sequenceSpy('on:_exit');
-        }
+        toggle: 'off'
       }
     });
   });
@@ -128,12 +118,6 @@ describe('a finite state machine', () => {
         assert.equal('on', callback.secondCall.args[0]);
       });
 
-      it('should support async event handlers', async () => {
-        await fsm.toggleEventually();
-        assert.isTrue(callback.calledTwice);
-        assert.equal('on', callback.secondCall.args[0]);
-      });
-
       it('should pass through args to event handler', async () => {
         kickHandler.withArgs('hard').returns('on');
 
@@ -160,15 +144,6 @@ describe('a finite state machine', () => {
         assert.equal('off:_exit', sequenceSpy.secondCall.args[0]);
         assert.equal('on', sequenceSpy.thirdCall.args[0]);
         assert.equal('on:_enter', sequenceSpy.getCall(3).args[0]);
-      });
-
-      it('should support async _exit and _enter handlers', async () => {
-        callback.callsFake(sequenceSpy);
-        await fsm.toggle(); // toggle off
-        await fsm.toggle(); // toggle on
-        assert.equal(6, sequenceSpy.callCount);
-        assert.equal('on:_exit', sequenceSpy.getCall(4).args[0]);
-        assert.equal('off', sequenceSpy.getCall(5).args[0]);
       });
 
       it('should not throw error when no matching state node', async () => {
@@ -218,18 +193,6 @@ describe('a finite state machine', () => {
           await debouncedKick;
           assert.isTrue(kickHandler.calledOnce);
           assert.equal('hard', kickHandler.firstCall.args[0]);
-        });
-
-        it('should support async _exit and _enter handlers', async () => {
-          // NOTE: fake timers don't work due to nested async setTimeout calls
-          // using short debounce wait with real timers instead
-          clock.restore();
-          callback.callsFake(sequenceSpy);
-          await fsm.toggle.debounce(1)(); // toggle off
-          await fsm.toggle.debounce(1)(); // toggle on
-          assert.equal(6, sequenceSpy.callCount);
-          assert.equal('on:_exit', sequenceSpy.getCall(4).args[0]);
-          assert.equal('off', sequenceSpy.getCall(5).args[0]);
         });
 
         it('should debounce multiple calls within wait time', async () => {

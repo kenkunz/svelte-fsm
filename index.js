@@ -37,29 +37,24 @@ export default function svelteFsm(state, states = {}) {
 
   /*
    * Debounce functionality
-   * - debouncer methed is bound to dynamic event invoker methods (see Proxy section below)
-   * - event.debounce(wait) returns a debounced verion of event invoker
-   * - may be called with different wait values; debounces all event invocations for the same
-   *   invoker method (based on the property name)
+   * - debounce is lazily bound to dynamic event invoker methods (see Proxy section below)
+   * - event.debounce(wait, ...args) calls event with args after wait ms (unless called again first)
+   * - cancels all prior invocations (based on prop name) even if called with different wait values
    */
   const timeout = {};
 
-  async function debounce(wait, event, ...args) {
+  async function debounce(event, wait = 100, ...args) {
     clearTimeout(timeout[event]);
     await new Promise((resolve) => timeout[event] = setTimeout(resolve, wait));
     delete timeout[event];
     return invoke(event, ...args);
   }
 
-  function debouncerFor(event) {
-    return (wait = 100) => debounce.bind(null, wait, event);
-  }
-
   /*
    * Proxy-based event invocation API:
    * - return a proxy object with single native subscribe method
    * - all other properties act as dynamic event invocation methods
-   * - event invokers also respond to .debounce(wait), returning a debounced event invoker
+   * - event invokers also respond to .debounce(wait, ...args) (see above)
    * - subscribe() also behaves as an event invoker when called with any args other than a
    *   single callback (or when debounced)
    */
@@ -71,13 +66,13 @@ export default function svelteFsm(state, states = {}) {
     }
   }
 
-  subscribeOrInvoke.debounce = debouncerFor('subscribe');
+  subscribeOrInvoke.debounce = debounce.bind(null, 'subscribe');
 
   return new Proxy({ subscribe: subscribeOrInvoke }, {
     get(target, property) {
       if (!Reflect.has(target, property)) {
         target[property] = invoke.bind(null, property);
-        target[property].debounce = debouncerFor(property);
+        target[property].debounce = debounce.bind(null, property);
       }
       return Reflect.get(target, property);
     }

@@ -161,61 +161,55 @@ describe('a finite state machine', () => {
     });
 
     describe('event hadnlers’ debounce property', () => {
+      let clock;
+
+      beforeEach(() => {
+        clock = sinon.useFakeTimers();
+      });
+
+      afterEach(() => {
+        clock.restore();
+      });
+
       it('should be a function', () => {
         assert.isFunction(fsm.someEvent.debounce);
       });
 
-      it('should return a function', async () => {
-        assert.isFunction(fsm.someEvent.debounce());
+      it('should invoke event after specified wait time', async () => {
+        const debouncedKick = fsm.kick.debounce(100);
+        clock.tick(100);
+        await debouncedKick;
+        assert.isTrue(kickHandler.calledOnce);
       });
 
-      describe('invoking returned debounce function', () => {
-        let clock;
+      it('should pass arguments through to handler', async () => {
+        const debouncedKick = fsm.kick.debounce(100, 'hard');
+        clock.tick(100);
+        await debouncedKick;
+        assert.isTrue(kickHandler.calledOnce);
+        assert.equal('hard', kickHandler.firstCall.args[0]);
+      });
 
-        beforeEach(() => {
-          clock = sinon.useFakeTimers();
-        });
+      it('should debounce multiple calls within wait time', async () => {
+        const firstKick = fsm.kick.debounce(100, 1);
+        clock.tick(50);
+        const secondKick = fsm.kick.debounce(100, 2);
+        clock.tick(50);
+        assert.isTrue(kickHandler.notCalled);
+        clock.tick(50);
+        await secondKick;
+        assert.isTrue(kickHandler.calledOnce);
+        assert.equal(2, kickHandler.firstCall.args[0]);
+      });
 
-        afterEach(() => {
-          clock.restore();
-        });
-
-        it('should invoke event after specified wait time', async () => {
-          const debouncedKick = fsm.kick.debounce(100)();
-          clock.tick(100);
-          await debouncedKick;
-          assert.isTrue(kickHandler.calledOnce);
-        });
-
-        it('should pass arguments through to handler', async () => {
-          const debouncedKick = fsm.kick.debounce(100)('hard');
-          clock.tick(100);
-          await debouncedKick;
-          assert.isTrue(kickHandler.calledOnce);
-          assert.equal('hard', kickHandler.firstCall.args[0]);
-        });
-
-        it('should debounce multiple calls within wait time', async () => {
-          const firstKick = fsm.kick.debounce(100)(1);
-          clock.tick(50);
-          const secondKick = fsm.kick.debounce(100)(2);
-          clock.tick(50);
-          assert.isTrue(kickHandler.notCalled);
-          clock.tick(50);
-          await secondKick;
-          assert.isTrue(kickHandler.calledOnce);
-          assert.equal(2, kickHandler.firstCall.args[0]);
-        });
-
-        it('should invoke event after last call’s wait time', async () => {
-          const firstKick = fsm.kick.debounce(100)(1);
-          clock.tick(50);
-          const secondKick = fsm.kick.debounce(10)(2);
-          clock.tick(10);
-          await secondKick;
-          assert.isTrue(kickHandler.calledOnce);
-          assert.equal(2, kickHandler.firstCall.args[0]);
-        });
+      it('should invoke event after last call’s wait time', async () => {
+        const firstKick = fsm.kick.debounce(100, 1);
+        clock.tick(50);
+        const secondKick = fsm.kick.debounce(10, 2);
+        clock.tick(10);
+        await secondKick;
+        assert.isTrue(kickHandler.calledOnce);
+        assert.equal(2, kickHandler.firstCall.args[0]);
       });
     });
   });

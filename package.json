@@ -1,6 +1,6 @@
 {
   "name": "svelte-fsm",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Tiny, expressive finite state machines for svelte",
   "type": "module",
   "main": "./index.js",

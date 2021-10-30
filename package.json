@@ -1,7 +1,7 @@
 {
   "name": "svelte-fsm",
   "version": "0.6.0",
-  "description": "Tiny, expressive finite state machines for svelte",
+  "description": "Tiny (<1kb), expressive, Svelte-optimized Finite State Machine (FSM) library",
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -12,6 +12,11 @@
   "scripts": {
     "test": "mocha"
   },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  },
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/kenkunz/svelte-fsm.git"
@@ -31,7 +36,7 @@
   "homepage": "https://github.com/kenkunz/svelte-fsm#README",
   "devDependencies": {
     "chai": "^4.3.4",
-    "mocha": "^9.1.1",
+    "mocha": "^9.1.3",
     "sinon": "^11.1.2"
   }
 }

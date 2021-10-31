@@ -166,7 +166,7 @@ describe('a finite state machine', () => {
     });
   });
 
-  describe('dynamic event debounce methods', () => {
+  describe('event debounce methods', () => {
     let clock;
 
     beforeEach(() => {

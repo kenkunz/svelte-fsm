@@ -1,4 +1,4 @@
-export default function svelteFsm(state, states = {}) {
+export default function (state, states = {}) {
   /*
    * Core Finite State Machine functionality
    * - adheres to Svelte store contract (https://svelte.dev/docs#Store_contract)

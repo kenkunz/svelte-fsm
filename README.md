@@ -151,11 +151,11 @@ const myFsm = fsm('initial', {});
 
 ### States
 
-Each **state** is a top-level property of the `states` object. The state's _key_ be any valid object
-property name (string or Symbol), but we recommend you use descriptive string values. The state's
-_value_ is an object including _transitions_ and _actions_. The simplest state definition is just an
-empty object. You might use this for a final state where no further transitions or actions are
-possible.
+Each **state** is a top-level property of the `states` object. The state's _key_ can be any valid
+object property name (string or Symbol), but we recommend you use descriptive string values. The
+state's _value_ is an object including _transitions_ and _actions_. The simplest state definition is
+just an empty object. You might use this for a final state where no further transitions or actions
+are possible.
 ```javascript
 const myFsm = fsm('initial', {
   initial: {
@@ -273,7 +273,7 @@ const bucket = fsm('notFull', {
 ### Event invocation
 
 Conceptually, invoking an event on an FSM object is _asking it to do something_. The object decides
-_what_ to do based on what state its in. The most natural syntax for _asking an object to do
+_what_ to do based on what state it's in. The most natural syntax for _asking an object to do
 something_ is simply a function call. Event invocations can include arguments, which are passed
 to matching actions.
 ```javascript
@@ -281,7 +281,7 @@ myFsm.finish(); // => 'final'
 bucket.add(10); // => 'full'
 ```
 The resulting state of the object is returned from invocations. In addition, _subscribers_
-are notified if the state changes.
+are notified if the state changes (see below).
 
 Events can be invoked with a delay by appending `.debounce` to any invocation. The first argument
 to `debounce` should be the wait time in milliseconds; subsequent arguemnts are forwarded to the

@@ -31,20 +31,22 @@ See [Full API](#full-api) below.
 ## Examples
 
 ### Simple on/off switch
+[View in Svelte REPL](https://svelte.dev/repl/431cef60a5554253b00dfdde2ad096ec)
 
 ```javascript
 import fsm from 'svelte-fsm';
 
-const switch = fsm('on', {
-  on:  { toggle: 'off' },
-  off: { toggle: 'on'  }
+const simpleSwitch = fsm('off', {
+  off: { toggle: 'on'  },
+  on:  { toggle: 'off' }
 });
 
-switch.toggle(); // => 'off'
-switch.toggle(); // => 'on'
+simpleSwitch.toggle(); // => 'on'
+simpleSwitch.toggle(); // => 'off'
 ```
 
 ### Traffic light using timers
+[View in Svelte REPL](https://svelte.dev/repl/7da59b636bbb4fbab27c5c932619bbc8)
 
 ```javascript
 import fsm from 'svelte-fsm';
@@ -58,12 +60,12 @@ const trafficLight = fsm('initial', {
   },
 
   yellow: {
-    _enter: { trafficLight.change.debounce(5000) },
-    change: 'yellow'
+    _enter() { trafficLight.change.debounce(5000); },
+    change: 'red'
   },
 
   red: {
-    _enter: { trafficLight.change.debounce(20000) },
+    _enter() { trafficLight.change.debounce(20000); },
     change: 'green'
   }
 });
@@ -78,61 +80,8 @@ trafficLight.start();
 // ...
 ```
 
-### Within a Svelte-component – form state machine with side-effects
-
-```svelte
-<script>
-  import fsm from 'svelte-fsm';
-
-  let value, error;
-
-  const form = fsm('entering', {
-    entering: {
-      submit: 'submitting'
-    },
-
-    submitting: {
-      _enter() {
-        const body = new URLSearchParams({value});
-        fetch('https://some.endpoint', { method: 'POST', body })
-          .then(form.success)
-          .catch(form.error);
-      },
-
-      success(response) {
-        if (response.status === '200') {
-          return 'completed';
-        } else {
-          error = { code: response.status, message: response.statusText };
-          return 'invalid';
-        }
-      },
-
-      error(err) {
-        error = err;
-        return 'invalid';
-      }
-    },
-
-    invalid: {
-      input() {
-        error = null;
-        return 'entering';
-      }
-    },
-
-    completed: {}
-  });
-
-  $: disabled = !['entering', 'invalid'].includes($form);
-</script>
-
-<form on:submit={form.submit} class:error>
-  <input bind:value {disabled} on:input={form.input}>
-  <button type="submit" {disabled}>Submit</button>
-</form>
-{#if error}{error.message}{/if}
-```
+### Within a Svelte-component – form states (entering, submitting, invalid, etc.)
+[View in Svelte REPL](https://svelte.dev/repl/7da59b636bbb4fbab27c5c932619bbc8)
 
 ## Full API
 

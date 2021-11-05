@@ -24,7 +24,7 @@ and `states`
 * **transitions** are just property values or function return values
 * **actions** are just functions
 * **timers** (often used in state machines) are available by calling `.debounce(wait)` on any event
-* **context** is just… *context*! (i.e., the lexical scope of your fsm)
+* **context** is just… *context* (i.e., the lexical scope of your fsm)
 
 See [Full API](#full-api) below.
 
@@ -46,33 +46,30 @@ simpleSwitch.toggle(); // => 'off'
 ```
 
 ### Traffic light using timers
-[View in Svelte REPL](https://svelte.dev/repl/7da59b636bbb4fbab27c5c932619bbc8)
+[View in Svelte REPL](https://svelte.dev/repl/779253dd54b542cba1b35036036375be)
 
 ```javascript
 import fsm from 'svelte-fsm';
 
-const trafficLight = fsm('initial', {
-  initial: { start: 'green' },
-
+const trafficLight = fsm('green', {
   green: {
-    _enter() { trafficLight.change.debounce(20000); },
+    _enter() { this.change.debounce(20000); },
     change: 'yellow'
   },
 
   yellow: {
-    _enter() { trafficLight.change.debounce(5000); },
+    _enter() { this.change.debounce(5000); },
     change: 'red'
   },
 
   red: {
-    _enter() { trafficLight.change.debounce(20000); },
+    _enter() { this.change.debounce(20000); },
     change: 'green'
   }
 });
 
 trafficLight.subscribe(console.log);
-trafficLight.start();
-// [ immiadetely  ] => 'initial'
+
 // [ immiadetely  ] => 'green'
 // [ after 20 sec ] => 'yellow'
 // [ after  5 sec ] => 'red'
@@ -80,8 +77,11 @@ trafficLight.start();
 // ...
 ```
 
-### Within a Svelte-component – form states (entering, submitting, invalid, etc.)
-[View in Svelte REPL](https://svelte.dev/repl/7da59b636bbb4fbab27c5c932619bbc8)
+### Svelte form component
+View and test a complete `<form>` component example with various states (entering, submitting,
+invalid, etc.).
+
+[View in Svelte REPL](https://svelte.dev/repl/cb90cb526f7b4dc98efbc6c67b35dca2)
 
 ## Full API
 
@@ -100,11 +100,11 @@ const myFsm = fsm('initial', {});
 
 ### States
 
-Each **state** is a top-level property of the `states` object. The state's _key_ can be any valid
-object property name (string or Symbol), but we recommend you use descriptive string values. The
-state's _value_ is an object including _transitions_ and _actions_. The simplest state definition is
-just an empty object. You might use this for a final state where no further transitions or actions
-are possible.
+Each **state** is a top-level property of the `states` object. A state's _key_ can be any valid
+object property name (string or Symbol) except the wildcard `'*'` (see [Fallback
+Actions](#fallback-actions) below). A state's _value_ should be an object with _transition_ and
+_action_ properties. The simplest state definition is just an empty object (you might use this for
+a _final_ state where no further transitions or actions are possible).
 ```javascript
 const myFsm = fsm('initial', {
   initial: {
@@ -133,11 +133,12 @@ const myFsm = fsm('initial', {
 
 ### Actions
 
-As already hinted, states can include methods called _actions_. An action may or may not result in a
-transition. Actions are useful for _side-effects_ (requesting data, modifying context, generating
-output, etc.) as well as for _conditional_ or (_guarded_) transitions. Since an action _optionally_
-returns a transition state, a single action might result in a transition in some circumstances and
-not others, and may result in different transitions. Actions can also optionally receive arguments.
+As already mentioned, states can include methods called _actions_. An action may or may not result
+in a transition. Actions are useful for _side-effects_ (requesting data, modifying context,
+generating output, etc.) as well as for _conditional_ or (_guarded_) transitions. Since an action
+_optionally_ returns a transition state, a single action might result in a transition in some
+circumstances and not others, and may result in different transitions. Actions can also optionally
+receive arguments.
 ```javascript
 const max = 10;
 let level = 0;
@@ -171,17 +172,28 @@ const bucket = fsm('notFull', {
 
 ### Lifecycle Actions
 
-States can also include three special lifecycle actions:
-* `_init` (experimental): called when a new FSM object is created with `initialState` matching the
-state.
-* `_enter`: called when the state is entered
-* `_exit`: called when the state is exited
+States can also include two special lifecycle actions: `_enter` and `_exit`. These actions are only
+invoked when a transition occurs – `_exit` is invoked first on the state being exited, followed by
+`_enter` on the new state being entered.
 
-Unlike noromal actions, lifecycle methods cannot return a state transition (return values are
+Unlike normal actions, lifecycle methods cannot return a state transition (return values are
 ignored). These methods are called _during_ a transition and cannot modify the outcome of it.
 
-Currently, lifecycle actions do not receive any arguments. This may be changed in an upcoming
-version.
+Lifecycle methods receive a single _lifecycle metadata_ argument with the following properties:
+```javascript
+{
+  from: 'peviousState',  // the state prior to the transition.
+  to: 'newState',        // the new state being transitioned to
+  event: 'eventName',    // the name of the invoked event that resulted in the transition
+  args: [ ... ]          // the arguments that were passed to the event
+}
+```
+
+A somewhat special case is when a new state machine object is initialized. The `_enter` action
+is called on the _initial_ state with a value of `null` for both the `from` and `event` properties,
+and an empty `args` array. This can be useful in case you want different _entry_ behavior on
+initialization vs. when the state is re-entered.
+
 ```javascript
 const max = 10;
 let level = 0;
@@ -207,7 +219,7 @@ const bucket = fsm('notFull', {
   },
 
   overflowing: {
-    _enter() {
+    _enter({ from, to, event, args }) {
       spillage = level - max;
       level = max;
     }
@@ -219,11 +231,18 @@ const bucket = fsm('notFull', {
 });
 ```
 
+### Fallback Actions
+
+Actions may also be defined on a special fallback wildcard state `'*'`. Actions defined on the
+wildcard state will be invoked when no matching property exists on the FSM object's current state.
+This is true for both _normal_ and _lifecycle_ actions. This is useful for defining default
+behavior, which can be overridden within specific states.
+
 ### Event invocation
 
 Conceptually, invoking an event on an FSM object is _asking it to do something_. The object decides
 _what_ to do based on what state it's in. The most natural syntax for _asking an object to do
-something_ is simply a function call. Event invocations can include arguments, which are passed
+something_ is simply a method call. Event invocations can include arguments, which are passed
 to matching actions.
 ```javascript
 myFsm.finish(); // => 'final'
@@ -231,6 +250,31 @@ bucket.add(10); // => 'full'
 ```
 The resulting state of the object is returned from invocations. In addition, _subscribers_
 are notified if the state changes (see below).
+
+### Action method binding
+
+Action methods are called with the `this` keyword bound to the FSM object. This enables you to
+invoke events from within the FSM's action methods, even before the resulting FSM object has been
+assigned to a variable.
+
+When is it useful to invoke events within action methods? A common pattern is to initiate an
+asynchronous event from within a state's `_enter` action (e.g., a timed event using `debounce`, or a
+web request using `fetch`). The event invokes an action on the same state – e.g., `success()` or
+`error()`, resulting in an appropriate transition. The [Traffic
+Light](https://svelte.dev/repl/779253dd54b542cba1b35036036375be) and [Svelte Form
+States](https://svelte.dev/repl/cb90cb526f7b4dc98efbc6c67b35dca2) examples illustrate this scenario.
+
+Making _synchronous_ event calls within an action method is not recommended (`this.someEvent()`).
+Doing so may yield surprising results – e.g., if you invoke an event from an action that returns a
+state transition, and the invoked action _also_ returns a transition, you are essentially making a
+nested transition. The _outer_ transition (original action return value) will have the final say.
+
+Note that [arrow function
+expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
+do not have their own `this` binding. You may use arrow functions as action properties, just don't
+expect `this` to reference the FSM object.
+
+### Debounced invocation
 
 Events can be invoked with a delay by appending `.debounce` to any invocation. The first argument
 to `debounce` should be the wait time in milliseconds; subsequent arguemnts are forwarded to the

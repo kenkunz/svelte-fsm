@@ -23,7 +23,10 @@ describe('a finite state machine', () => {
         toggle: 'on',
         surge: 'blown',
         kick: kickHandler,
-        subscribe: subscribeHandler
+        subscribe: subscribeHandler,
+        arrowFunction: () => {
+          this.shouldExplode();
+        }
       },
 
       on: {
@@ -56,20 +59,20 @@ describe('a finite state machine', () => {
       assert.isFunction(fsm.subscribe(sinon.fake()));
     });
 
-    it('should call subscribe handler when invoked with no args', () => {
+    it('should call subscribe action handler when invoked with no args', () => {
       fsm.subscribe();
       assert.isTrue(subscribeHandler.calledOnce);
       assert.isEmpty(subscribeHandler.firstCall.args);
     });
 
-    it('should call subscribe handler when invoked with single non-function arg', () => {
+    it('should call subscribe action handler when invoked with single non-function arg', () => {
       fsm.subscribe('not a function');
       assert.isTrue(subscribeHandler.calledOnce);
       assert.lengthOf(subscribeHandler.firstCall.args, 1);
       assert.equal('not a function', subscribeHandler.firstCall.args[0]);
     });
 
-    it('should call subscribe handler when invoked with multiple args', () => {
+    it('should call subscribe action handler when invoked with multiple args', () => {
       const fn = sinon.fake()
       fsm.subscribe(fn, null);
       assert.isTrue(subscribeHandler.calledOnce);
@@ -79,7 +82,7 @@ describe('a finite state machine', () => {
     });
   });
 
-  describe('dynamic event methods', function() {
+  describe('event invocations', function() {
     let callback;
     let unsubscribe;
 
@@ -92,29 +95,29 @@ describe('a finite state machine', () => {
       unsubscribe();
     });
 
-    it('should silently handle unregistered event', () => {
+    it('should silently handle unregistered actions', () => {
       fsm.noop();
       assert.isTrue(callback.calledOnce);
     });
 
-    it('should invoke event handler function', () => {
+    it('should invoke registered action functions', () => {
       fsm.kick();
       assert.isTrue(kickHandler.calledOnce);
     });
 
-    it('should transition to static value registered to event', () => {
+    it('should transition to static value registered action', () => {
       fsm.toggle();
       assert.isTrue(callback.calledTwice);
       assert.equal('on', callback.secondCall.args[0]);
     });
 
-    it('should not transition if nothing returned from event handler', () => {
+    it('should not transition if invoked action returns nothing', () => {
       fsm.kick();
       assert.isTrue(callback.calledOnce);
       assert.equal('off', callback.firstCall.args[0]);
     });
 
-    it('should transition to event handler return value', () => {
+    it('should transition to invoked action return value', () => {
       kickHandler.returns('on');
       fsm.kick();
       assert.isTrue(callback.calledTwice);
@@ -125,7 +128,7 @@ describe('a finite state machine', () => {
       assert.equal('on', fsm.toggle());
     });
 
-    it('should pass through args to event handler', () => {
+    it('should pass arguments through to invoked action', () => {
       kickHandler.withArgs('hard').returns('on');
 
       fsm.kick();
@@ -137,13 +140,22 @@ describe('a finite state machine', () => {
       assert.equal('on', callback.secondCall.args[0]);
     });
 
+    it('should bind `this` to state proxy object on invoked actions', () => {
+      fsm.kick();
+      assert.isTrue(kickHandler.calledOn(fsm));
+    });
+
+    it('should not bind `this` on actions defined as arrow functions', () => {
+      assert.throws(fsm.arrowFunction, TypeError);
+    });
+
     it('should not notify subscribers when state unchanged', () => {
       kickHandler.returns('off');
       fsm.kick();
       assert.isTrue(callback.calledOnce);
     });
 
-    it('should call lifecycle handlers in proper sequence', () => {
+    it('should call lifecycle actions in proper sequence', () => {
       callback.callsFake(sequenceSpy);
       fsm.toggle();
       assert.equal(4, sequenceSpy.callCount);
@@ -153,7 +165,7 @@ describe('a finite state machine', () => {
       assert.equal('on:_enter', sequenceSpy.getCall(3).args[0]);
     });
 
-    it('should call lifecycle handlers with transition metadata', () => {
+    it('should call lifecycle actions with transition metadata', () => {
       const initial = { from: null, to: 'off', event: null, args: [] };
       const transition = { from: 'off', to: 'on', event: 'toggle', args: [1, 'foo'] };
       fsm.toggle(1, 'foo');
@@ -209,7 +221,7 @@ describe('a finite state machine', () => {
       assert.isTrue(kickHandler.calledOnce);
     });
 
-    it('should pass arguments through to handler', async () => {
+    it('should pass arguments through to action', async () => {
       const debouncedKick = fsm.kick.debounce(100, 'hard');
       clock.tick(100);
       await debouncedKick;
@@ -229,7 +241,7 @@ describe('a finite state machine', () => {
       assert.equal(2, kickHandler.firstCall.args[0]);
     });
 
-    it('should invoke event after last call’s wait time', async () => {
+    it('should invoke action after last call’s wait time', async () => {
       const firstKick = fsm.kick.debounce(100, 1);
       clock.tick(50);
       const secondKick = fsm.kick.debounce(10, 2);

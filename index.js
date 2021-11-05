@@ -7,6 +7,7 @@ export default function (state, states = {}) {
    * - calls _exit() and _enter() methods if they are defined on exited/entered state
    */
   const subscribers = new Set();
+  let proxy;
 
   function subscribe(callback) {
     subscribers.add(callback);
@@ -24,7 +25,7 @@ export default function (state, states = {}) {
 
   function dispatch(event, ...args) {
     const action = states[state]?.[event] ?? states['*']?.[event];
-    return action instanceof Function ? action(...args) : action;
+    return action instanceof Function ? action.apply(proxy, args) : action;
   }
 
   function invoke(event, ...args) {
@@ -34,8 +35,6 @@ export default function (state, states = {}) {
     }
     return state;
   }
-
-  dispatch('_enter', { from: null, to: state, event: null, args: [] });
 
   /*
    * Debounce functionality
@@ -70,7 +69,7 @@ export default function (state, states = {}) {
 
   subscribeOrInvoke.debounce = debounce.bind(null, 'subscribe');
 
-  return new Proxy({ subscribe: subscribeOrInvoke }, {
+  proxy = new Proxy({ subscribe: subscribeOrInvoke }, {
     get(target, property) {
       if (!Reflect.has(target, property)) {
         target[property] = invoke.bind(null, property);
@@ -79,4 +78,10 @@ export default function (state, states = {}) {
       return Reflect.get(target, property);
     }
   });
+
+  /*
+   * `_enter` initial state and return the proxy object
+   */
+  dispatch('_enter', { from: null, to: state, event: null, args: [] });
+  return proxy;
 }

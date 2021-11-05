@@ -35,7 +35,7 @@ export default function (state, states = {}) {
     return state;
   }
 
-  dispatch('_init');
+  dispatch('_enter', { from: null, to: state, event: null, args: [] });
 
   /*
    * Debounce functionality

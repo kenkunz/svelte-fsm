@@ -12,14 +12,12 @@ describe('a finite state machine', () => {
 
     fsm = svelteFsm('off', {
       off: {
-        _init() {
-          sequenceSpy('off:_init');
-        },
+        _enter: sequenceSpy.bind(null, 'off:_enter'),
+        _exit: sequenceSpy.bind(null, 'off:_exit'),
         toggle: 'on',
         surge: 'blown',
         kick: kickHandler,
-        subscribe: subscribeHandler,
-        _exit: sequenceSpy.bind(null, 'off:_exit')
+        subscribe: subscribeHandler
       },
       on: {
         _enter: sequenceSpy.bind(null, 'on:_enter'),
@@ -142,17 +140,19 @@ describe('a finite state machine', () => {
       callback.callsFake(sequenceSpy);
       fsm.toggle();
       assert.equal(4, sequenceSpy.callCount);
-      assert.equal('off:_init', sequenceSpy.firstCall.args[0]);
+      assert.equal('off:_enter', sequenceSpy.firstCall.args[0]);
       assert.equal('off:_exit', sequenceSpy.secondCall.args[0]);
       assert.equal('on', sequenceSpy.thirdCall.args[0]);
       assert.equal('on:_enter', sequenceSpy.getCall(3).args[0]);
     });
 
     it('should call lifecycle handlers with transition metadata', () => {
+      const initial = { from: null, to: 'off', event: null, args: [] };
+      const transition = { from: 'off', to: 'on', event: 'toggle', args: [1, 'foo'] };
       fsm.toggle(1, 'foo');
-      const expected = { from: 'off', to: 'on', event: 'toggle', args: [1, 'foo'] };
-      assert.deepEqual(expected, sequenceSpy.secondCall.args[1]);
-      assert.deepEqual(expected, sequenceSpy.thirdCall.args[1]);
+      assert.deepEqual(initial, sequenceSpy.firstCall.args[1]);
+      assert.deepEqual(transition, sequenceSpy.secondCall.args[1]);
+      assert.deepEqual(transition, sequenceSpy.thirdCall.args[1]);
     });
 
     it('should not throw error when no matching state node', () => {

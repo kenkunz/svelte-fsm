@@ -11,6 +11,12 @@ describe('a finite state machine', () => {
     sequenceSpy = sinon.stub();
 
     fsm = svelteFsm('off', {
+      '*': {
+        _exit: sequenceSpy.bind(null, '*:_exit'),
+        surge: 'blown-default',
+        poke: sequenceSpy.bind(null, 'hey!')
+      },
+
       off: {
         _enter: sequenceSpy.bind(null, 'off:_enter'),
         _exit: sequenceSpy.bind(null, 'off:_exit'),
@@ -19,6 +25,7 @@ describe('a finite state machine', () => {
         kick: kickHandler,
         subscribe: subscribeHandler
       },
+
       on: {
         _enter: sequenceSpy.bind(null, 'on:_enter'),
         toggle: 'off'
@@ -160,6 +167,17 @@ describe('a finite state machine', () => {
       assert.isTrue(callback.calledTwice);
       assert.equal('blown', callback.secondCall.args[0]);
       assert.doesNotThrow(() => fsm.toggle());
+    });
+
+    it('should invoke fallback actions if no match on current state', () => {
+      sequenceSpy.reset();
+      fsm.poke();
+      fsm.toggle();
+      const state = fsm.surge();
+      assert.equal('blown-default', state);
+      assert.equal(4, sequenceSpy.callCount);
+      assert.equal('hey!', sequenceSpy.firstCall.args[0]);
+      assert.equal('*:_exit', sequenceSpy.lastCall.args[0]);
     });
 
     it('should stop notifying after unsubscribe', () => {

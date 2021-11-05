@@ -23,8 +23,8 @@ export default function (state, states = {}) {
   }
 
   function dispatch(event, ...args) {
-    const value = states[state]?.[event];
-    return value instanceof Function ? value(...args) : value;
+    const action = states[state]?.[event] ?? states['*']?.[event];
+    return action instanceof Function ? action(...args) : action;
   }
 
   function invoke(event, ...args) {

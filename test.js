@@ -19,14 +19,10 @@ describe('a finite state machine', () => {
         surge: 'blown',
         kick: kickHandler,
         subscribe: subscribeHandler,
-        _exit() {
-          sequenceSpy('off:_exit');
-        }
+        _exit: sequenceSpy.bind(null, 'off:_exit')
       },
       on: {
-        _enter() {
-          sequenceSpy('on:_enter');
-        },
+        _enter: sequenceSpy.bind(null, 'on:_enter'),
         toggle: 'off'
       }
     });
@@ -150,6 +146,13 @@ describe('a finite state machine', () => {
       assert.equal('off:_exit', sequenceSpy.secondCall.args[0]);
       assert.equal('on', sequenceSpy.thirdCall.args[0]);
       assert.equal('on:_enter', sequenceSpy.getCall(3).args[0]);
+    });
+
+    it('should call lifecycle handlers with transition metadata', () => {
+      fsm.toggle(1, 'foo');
+      const expected = { from: 'off', to: 'on', event: 'toggle', args: [1, 'foo'] };
+      assert.deepEqual(expected, sequenceSpy.secondCall.args[1]);
+      assert.deepEqual(expected, sequenceSpy.thirdCall.args[1]);
     });
 
     it('should not throw error when no matching state node', () => {

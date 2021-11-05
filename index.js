@@ -14,11 +14,12 @@ export default function (state, states = {}) {
     return () => subscribers.delete(callback);
   }
 
-  function transition(newState) {
-    dispatch('_exit');
+  function transition(newState, event, args) {
+    const metadata = { from: state, to: newState, event, args };
+    dispatch('_exit', metadata);
     state = newState;
     subscribers.forEach((callback) => callback(state));
-    dispatch('_enter');
+    dispatch('_enter', metadata);
   }
 
   function dispatch(event, ...args) {
@@ -29,7 +30,7 @@ export default function (state, states = {}) {
   function invoke(event, ...args) {
     const newState = dispatch(event, ...args);
     if (newState !== undefined && newState !== state) {
-      transition(newState);
+      transition(newState, event, args);
     }
     return state;
   }

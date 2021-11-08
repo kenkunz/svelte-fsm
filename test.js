@@ -22,6 +22,10 @@ describe('a finite state machine', () => {
         surge: 'blown',
         kick: sinon.stub(),
         subscribe: sinon.fake(),
+        dateAction: new Date(),
+        objectAction: {},
+        numericAction: 1,
+        async asyncAction() {},
         arrowFunction: () => {
           this.shouldExplode();
         }
@@ -106,10 +110,17 @@ describe('a finite state machine', () => {
       assert.notCalled(callback);
     });
 
-    it('should transition to invoked action return value', () => {
+    it('should transition to invoked action return value (string)', () => {
       states.off.kick.returns('on');
       assert.equal('on', machine.kick());
       assert.calledWithExactly(callback, 'on');
+    });
+
+    it('should ignore non-string action return values', () => {
+      assert.equal('off', machine.dateAction());
+      assert.equal('off', machine.objectAction());
+      assert.equal('off', machine.numericAction());
+      assert.equal('off', machine.asyncAction());
     });
 
     it('should invoke action with correct `this` binding and arguments', () => {

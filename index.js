@@ -29,8 +29,8 @@ export default function (state, states = {}) {
   }
 
   function invoke(event, ...args) {
-    const newState = dispatch(event, ...args);
-    if (newState !== undefined && newState !== state) {
+    const newState = dispatch(event, ...args)?.valueOf();
+    if (typeof newState === 'string' && newState !== state) {
       transition(newState, event, args);
     }
     return state;

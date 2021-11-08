@@ -2,6 +2,8 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import fsm from './index.js';
 
+sinon.assert.expose(assert, { prefix: '' });
+
 describe('a finite state machine', () => {
   let states, machine;
 
@@ -48,25 +50,25 @@ describe('a finite state machine', () => {
     it('should invoke callback on initial subscribe', () => {
       const callback = sinon.stub();
       const unsubscribe = machine.subscribe(callback);
-      assert.isTrue(callback.calledOnce);
-      assert.isTrue(callback.calledWithExactly('off'));
+      assert.calledOnce(callback);
+      assert.calledWithExactly(callback, 'off');
       unsubscribe();
     });
 
     it('should call subscribe action handler when invoked with no args', () => {
       machine.subscribe();
-      assert.isTrue(states.off.subscribe.calledOnce);
+      assert.calledOnce(states.off.subscribe);
     });
 
     it('should call subscribe action handler when invoked with single non-function arg', () => {
       machine.subscribe('not a function');
-      assert.isTrue(states.off.subscribe.calledWithExactly('not a function'));
+      assert.calledWithExactly(states.off.subscribe, 'not a function');
     });
 
     it('should call subscribe action handler when invoked with multiple args', () => {
       const fn = sinon.fake()
       machine.subscribe(fn, null);
-      assert.isTrue(states.off.subscribe.calledWithExactly(fn, null));
+      assert.calledWithExactly(states.off.subscribe, fn, null);
     });
   });
 
@@ -86,38 +88,34 @@ describe('a finite state machine', () => {
 
     it('should silently handle unregistered actions', () => {
       assert.equal('off', machine.noop());
-      assert.isTrue(callback.notCalled);
+      assert.notCalled(callback);
     });
 
     it('should invoke registered action functions', () => {
       machine.kick();
-      assert.isTrue(states.off.kick.calledOnce);
+      assert.calledOnce(states.off.kick);
     });
 
     it('should transition to static value registered action', () => {
       assert.equal('on', machine.toggle());
-      assert.isTrue(callback.calledWithExactly('on'));
+      assert.calledWithExactly(callback, 'on');
     });
 
     it('should not transition if invoked action returns nothing', () => {
       assert.equal('off', machine.kick());
-      assert.isTrue(callback.notCalled);
+      assert.notCalled(callback);
     });
 
     it('should transition to invoked action return value', () => {
       states.off.kick.returns('on');
       assert.equal('on', machine.kick());
-      assert.isTrue(callback.calledWithExactly('on'));
-    });
-    
-    it('should pass arguments through to invoked action', () => {
-      machine.kick('hard');
-      assert.isTrue(states.off.kick.calledWithExactly('hard'));
+      assert.calledWithExactly(callback, 'on');
     });
 
-    it('should bind `this` to state proxy object on invoked actions', () => {
-      machine.kick();
-      assert.isTrue(states.off.kick.calledOn(machine));
+    it('should invoke action with correct `this` binding and arguments', () => {
+      machine.kick('hard');
+      assert.calledOn(states.off.kick, machine);
+      assert.calledWithExactly(states.off.kick, 'hard');
     });
 
     it('should not bind `this` on actions defined as arrow functions', () => {
@@ -132,35 +130,44 @@ describe('a finite state machine', () => {
     });
 
     it('should call _enter with appropirate metadata when fsm is created', () => {
-      const metadata = { from: null, to: 'off', event: null, args: [] };
-      assert.isTrue(states.off._enter.calledWithExactly(metadata));
+      assert.calledWithExactly(states.off._enter, {
+        from: null,
+        to: 'off',
+        event: null,
+        args: [] }
+      );
     });
 
     it('should call lifecycle actions with transition metadata', () => {
-      const metadata = { from: 'off', to: 'on', event: 'toggle', args: [1, 'foo'] };
+      const expected = {
+        from: 'off',
+        to: 'on',
+        event: 'toggle',
+        args: [1, 'foo']
+      };
       machine.toggle(1, 'foo');
-      assert.isTrue(states.off._exit.calledWithExactly(metadata));
-      assert.isTrue(states.on._enter.calledWithExactly(metadata));
+      assert.calledWithExactly(states.off._exit, expected);
+      assert.calledWithExactly(states.on._enter, expected);
     });
 
     it('should not throw error when no matching state node', () => {
       machine.surge();
-      assert.isTrue(callback.calledWithExactly('blown'));
+      assert.calledWithExactly(callback, 'blown');
       assert.doesNotThrow(() => machine.toggle());
     });
 
     it('should invoke fallback actions if no match on current state', () => {
       machine.poke();
-      assert.isTrue(states['*'].poke.called);
+      assert.called(states['*'].poke);
       machine.toggle();
       assert.equal('blown-default', machine.surge());
-      assert.isTrue(states['*']._exit.called);
+      assert.called(states['*']._exit);
     });
 
     it('should stop notifying after unsubscribe', () => {
       unsubscribe();
       machine.toggle();
-      assert.isTrue(callback.notCalled);
+      assert.notCalled(callback);
     });
   });
 
@@ -183,35 +190,35 @@ describe('a finite state machine', () => {
       const debouncedKick = machine.kick.debounce(100);
       clock.tick(100);
       await debouncedKick;
-      assert.isTrue(states.off.kick.calledOnce);
+      assert.calledOnce(states.off.kick);
     });
 
     it('should pass arguments through to action', async () => {
       const debouncedKick = machine.kick.debounce(100, 'hard');
       clock.tick(100);
       await debouncedKick;
-      assert.isTrue(states.off.kick.calledWithExactly('hard'));
+      assert.calledWithExactly(states.off.kick, 'hard');
     });
 
     it('should debounce multiple calls within wait time', async () => {
-      const firstKick = machine.kick.debounce(100, 1);
+      machine.kick.debounce(100, 1);
       clock.tick(50);
       const secondKick = machine.kick.debounce(100, 2);
       clock.tick(50);
-      assert.isTrue(states.off.kick.notCalled);
+      assert.notCalled(states.off.kick);
       clock.tick(50);
       await secondKick;
-      assert.isTrue(states.off.kick.calledWithExactly(2));
+      assert.calledWithExactly(states.off.kick, 2);
     });
 
     it('should invoke action after last call’s wait time', async () => {
-      const firstKick = machine.kick.debounce(100, 1);
+      machine.kick.debounce(100, 1);
       clock.tick(50);
       const secondKick = machine.kick.debounce(10, 2);
       clock.tick(10);
       await secondKick;
-      assert.isTrue(states.off.kick.calledOnce);
-      assert.isTrue(states.off.kick.calledWithExactly(2));
+      assert.calledOnce(states.off.kick);
+      assert.calledWithExactly(states.off.kick, 2);
     });
   });
 });

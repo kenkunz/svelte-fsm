@@ -10,25 +10,25 @@ describe('a finite state machine', () => {
   beforeEach(() => {
     states = {
       '*': {
-        _exit: sinon.stub(),
+        _exit: sinon.fake(),
         surge: 'blown-default',
-        poke: sinon.stub()
+        poke: sinon.fake()
       },
 
       off: {
-        _enter: sinon.stub(),
-        _exit: sinon.stub(),
+        _enter: sinon.fake(),
+        _exit: sinon.fake(),
         toggle: 'on',
         surge: 'blown',
         kick: sinon.stub(),
-        subscribe: sinon.stub(),
+        subscribe: sinon.fake(),
         arrowFunction: () => {
           this.shouldExplode();
         }
       },
 
       on: {
-        _enter: sinon.stub(),
+        _enter: sinon.fake(),
         toggle: 'off'
       }
     };
@@ -48,7 +48,7 @@ describe('a finite state machine', () => {
     });
 
     it('should invoke callback on initial subscribe', () => {
-      const callback = sinon.stub();
+      const callback = sinon.fake();
       const unsubscribe = machine.subscribe(callback);
       assert.calledOnce(callback);
       assert.calledWithExactly(callback, 'off');
@@ -77,7 +77,7 @@ describe('a finite state machine', () => {
     let unsubscribe;
 
     beforeEach(() => {
-      callback = sinon.stub();
+      callback = sinon.fake();
       unsubscribe = machine.subscribe(callback);
       callback.resetHistory();
     });

@@ -231,5 +231,14 @@ describe('a finite state machine', () => {
       assert.calledOnce(states.off.kick);
       assert.calledWithExactly(states.off.kick, 2);
     });
+
+    it('should cancel debounce invocation if called with null', async () => {
+      const kick = machine.kick.debounce(100, 1);
+      const cancelation = machine.kick.debounce(null);
+      clock.tick(100);
+      const state = await Promise.any([ kick, cancelation ]);
+      assert.notCalled(states.off.kick);
+      assert.equal('off', state);
+    });
   });
 });

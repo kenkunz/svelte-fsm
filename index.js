@@ -38,17 +38,22 @@ export default function (state, states = {}) {
 
   /*
    * Debounce functionality
-   * - debounce is lazily bound to dynamic event invoker methods (see Proxy section below)
-   * - event.debounce(wait, ...args) calls event with args after wait ms (unless called again first)
-   * - cancels all prior invocations (based on prop name) even if called with different wait values
+   * - `debounce` is lazily bound to dynamic event invoker methods (see Proxy section below)
+   * - `event.debounce(wait, ...args)` calls event with args after wait (unless called again first)
+   * - cancels all prior invocations made for the same event
+   * - cancels entirely when called with `wait` of `null`
    */
   const timeout = {};
 
   async function debounce(event, wait = 100, ...args) {
     clearTimeout(timeout[event]);
-    await new Promise((resolve) => timeout[event] = setTimeout(resolve, wait));
-    delete timeout[event];
-    return invoke(event, ...args);
+    if (wait === null) {
+      return state;
+    } else {
+      await new Promise((resolve) => timeout[event] = setTimeout(resolve, wait));
+      delete timeout[event];
+      return invoke(event, ...args);
+    }
   }
 
   /*

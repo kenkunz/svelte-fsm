@@ -284,7 +284,8 @@ and replaced with the new one (even if the delay time is different).
 bucket.add.debounce(2); // => Promise that resolves with 'overflowing'
 ```
 `debounce` invocations return a Promise that resolves with the resulting state if the invocation
-executes. Canceled invocations (due to a subsequent `debounce` call) never resolve.
+executes. Canceled invocations (due to a subsequent `debounce` call) never resolve. Calling
+`debounce(null)` cancels prior invocations without scheduling a new one, and resolves immediately.
 
 ### Subscribing to state changes
 

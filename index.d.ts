@@ -4,7 +4,7 @@ declare type State = string | symbol
 declare type States = Record<State, StateDescription>
 
 declare type StateDescription = {
-	[key: string]: State | (() => State)
+	[key: string]: State | ((...args: any[]) => State | void)
 }
 
 declare type ExtractStates<S extends States> = keyof S

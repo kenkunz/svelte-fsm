@@ -9,4 +9,12 @@ declare type StateDescription = {
 
 declare type ExtractStates<S extends States> = keyof S
 
-export default function svelteFsm<S extends States>(state: ExtractStates<S>, states: S): any
+declare type Unsubscribe = () => void
+
+declare type Subscribe<State> = (callback: (state: State) => void) => Unsubscribe
+
+export default function svelteFsm<S extends States>(state: ExtractStates<S>, states: S): {
+	[key: string]: () => State
+} & {
+	subscribe: Subscribe<ExtractStates<S>>
+}

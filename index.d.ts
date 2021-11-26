@@ -1,24 +1,40 @@
 
-declare type State = string | symbol
+declare type State = string | symbol | number
 
-declare type States = Record<State, Actions>
+declare type Action = string
 
-declare type LifecycleAction = (argument: { from: State, to: State, event: string, args: unknown }) => void
+declare type States<S extends State = State> = Record<S, Actions>
+
+declare type Args = any[]
+
+declare type LifecycleAction = (arg: { from: State, to: State, event: Action, args: Args }) => void
 
 declare type Actions = {
 	_enter?: LifecycleAction
 	_exit?: LifecycleAction
-	[key: string]: State | ((...args: any[]) => State) | ((...args: any[]) => void)
+	[key: string]: State | ((...args: Args) => State) | ((...args: Args) => void)
 }
 
-declare type ExtractStates<S extends States> = keyof S
+declare type ExtractStates<Sts extends States> = keyof Sts
+
+type ExtractObjectValues<A> = A[keyof A]
+
+type GetActionMapping<A extends Record<any, any>> = ExtractObjectValues<{
+	[a in keyof A]: keyof A[a]
+}>
+
+declare type ExtractActions<Sts extends States> = Exclude<GetActionMapping<Sts>, '_enter' | '_exit' | number | Symbol>
 
 declare type Unsubscribe = () => void
 
-declare type Subscribe<State> = (callback: (state: State) => void) => Unsubscribe
+declare type Subscribe<S> = (callback: (state: S) => void) => Unsubscribe
 
-export default function svelteFsm<S extends States>(state: ExtractStates<S>, states: S): {
-	[key: string]: () => State
+type StateMachine<S extends State, A extends string> = {
+	[key in A]?: (...args: Args) => S // TODO: check if actions are really optional
 } & {
-	subscribe: Subscribe<ExtractStates<S>>
+	subscribe: Subscribe<S>
 }
+
+declare const svelteFsm: <Sts extends States, S extends ExtractStates<Sts>>(state: S, states: Sts) => StateMachine<ExtractStates<Sts>, ExtractActions<Sts>>
+
+export default svelteFsm

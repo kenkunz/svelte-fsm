@@ -14,18 +14,22 @@ declare type ActionFunction = State | ((...args: Args) => State) | ((...args: Ar
 declare type Actions = {
 	_enter?: LifecycleAction
 	_exit?: LifecycleAction
-	[key: string]: ActionFunction
+	[key: Action]: ActionFunction
 }
 
 declare type ExtractStates<Sts extends States> = keyof Sts
 
 type ExtractObjectValues<A> = A[keyof A]
 
+type GetActionFunctionMapping<A extends Record<Action, ActionFunction>> = {
+	[Key in Exclude<keyof A, '_enter' | '_exit'>]: A[Key] extends string ? () => A[Key] : A[Key]
+}
+
 type GetActionMapping<A extends Record<State, Actions>> = ExtractObjectValues<{
-	[key in keyof A]: A[key] extends State ? () => A[key] : A[key] // TODO: make if-condition work
+	[Key in keyof A]: GetActionFunctionMapping<A[Key]>
 }>
 
-declare type ExtractActions<Sts extends States> = Exclude<GetActionMapping<Sts>, '_enter' | '_exit' | number | Symbol>
+declare type ExtractActions<Sts extends States> = GetActionMapping<Sts>
 
 declare type Unsubscribe = () => void
 

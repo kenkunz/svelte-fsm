@@ -1,5 +1,5 @@
 
-declare type State = string | symbol | number
+declare type State = string | symbol
 
 declare type Action = string
 
@@ -17,7 +17,7 @@ declare type Actions = {
 	[key: Action]: ActionFunction
 }
 
-declare type ExtractStates<Sts extends States> = keyof Sts
+declare type ExtractStates<Sts extends States> = Exclude<keyof Sts, number>
 
 type ExtractObjectValues<A> = A[keyof A]
 

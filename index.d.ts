@@ -1,17 +1,17 @@
 
-declare type State = string | symbol
+type State = string | symbol
 
-declare type Action = string
+type Action = string
 
-declare type States<S extends State = State> = Record<S, Actions>
+type States<S extends State = State> = Record<S, Actions>
 
-declare type Args = any[]
+type Args = any[]
 
-declare type LifecycleAction = (arg: { from: State, to: State, event: Action, args: Args }) => void
+type LifecycleAction = (arg: { from: State, to: State, event: Action, args: Args }) => void
 
-declare type ActionFunction = State | ((...args: Args) => State) | ((...args: Args) => void)
+type ActionFunction = State | ((...args: Args) => State) | ((...args: Args) => void)
 
-declare type Actions = {
+type Actions = {
 	_enter?: LifecycleAction
 	_exit?: LifecycleAction
 	[key: Action]: ActionFunction
@@ -19,7 +19,7 @@ declare type Actions = {
 
 type DetectFallBackState<X extends string | symbol> = X extends '*' ? string : X
 
-declare type ExtractStates<Sts extends States> = DetectFallBackState<Exclude<keyof Sts, number>>
+type ExtractStates<Sts extends States> = DetectFallBackState<Exclude<keyof Sts, number>>
 
 type ExtractObjectValues<A> = A[keyof A]
 
@@ -31,11 +31,11 @@ type GetActionMapping<A extends Record<State, Actions>> = ExtractObjectValues<{
 	[Key in keyof A]: GetActionFunctionMapping<A[Key]>
 }>
 
-declare type ExtractActions<Sts extends States> = GetActionMapping<Sts>
+type ExtractActions<Sts extends States> = GetActionMapping<Sts>
 
-declare type Unsubscribe = () => void
+type Unsubscribe = () => void
 
-declare type Subscribe<S> = (callback: (state: S) => void) => Unsubscribe
+type Subscribe<S> = (callback: (state: S) => void) => Unsubscribe
 
 type StateMachine<S extends State, A> = {
 	[key in keyof A]: A[key]

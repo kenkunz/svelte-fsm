@@ -45,6 +45,6 @@ type StateMachine<S extends State, A> = {
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
 
-declare const svelteFsm: <Sts extends States, S extends ExtractStates<Sts>>(state: S, states: Sts) => StateMachine<ExtractStates<Sts>, UnionToIntersection<ExtractActions<Sts>>>
+declare const svelteFsm: <Sts extends Readonly<States>, S extends ExtractStates<Sts>>(state: S, states: Sts) => StateMachine<ExtractStates<Sts>, UnionToIntersection<ExtractActions<Sts>>>
 
 export default svelteFsm

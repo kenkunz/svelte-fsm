@@ -1,50 +1,50 @@
 
-type State = string | symbol
+type BaseState = string | symbol
 
-type Action = string
+type BaseAction = string
 
-type States<S extends State = State> = Record<S, Actions>
+type BaseStates<State extends BaseState = BaseState> = Record<State, BaseActions>
 
 type Args = any[]
 
-type LifecycleAction = (arg: { from: State, to: State, event: Action, args: Args }) => void
+type LifecycleAction = (arg: { from: BaseState, to: BaseState, event: BaseAction, args: Args }) => void
 
-type ActionFunction = State | ((...args: Args) => State) | ((...args: Args) => void)
+type ActionFunction = BaseState | ((...args: Args) => BaseState) | ((...args: Args) => void)
 
-type Actions = {
+type BaseActions = {
 	_enter?: LifecycleAction
 	_exit?: LifecycleAction
-	[key: Action]: ActionFunction
+	[key: BaseAction]: ActionFunction
 }
 
-type DetectFallBackState<X extends string | symbol> = X extends '*' ? string : X
+type DetectFallBackState<State extends BaseState> = State extends '*' ? string : State
 
-type ExtractStates<Sts extends States> = DetectFallBackState<Exclude<keyof Sts, number>>
+type ExtractStates<States extends BaseStates> = DetectFallBackState<Exclude<keyof States, number>>
 
-type ExtractObjectValues<A> = A[keyof A]
+type ExtractObjectValues<Object> = Object[keyof Object]
 
-type GetActionFunctionMapping<A extends Record<Action, ActionFunction>> = {
-	[Key in Exclude<keyof A, '_enter' | '_exit'>]: A[Key] extends string ? () => A[Key] : A[Key]
+type GetActionFunctionMapping<Actions extends BaseActions> = {
+	[Key in Exclude<keyof Actions, '_enter' | '_exit'>]: Actions[Key] extends string ? () => Actions[Key] : Actions[Key]
 }
 
-type GetActionMapping<A extends Record<State, Actions>> = ExtractObjectValues<{
-	[Key in keyof A]: GetActionFunctionMapping<A[Key]>
+type GetActionMapping<States extends BaseStates> = ExtractObjectValues<{
+	[Key in keyof States]: GetActionFunctionMapping<States[Key]>
 }>
 
-type ExtractActions<Sts extends States> = GetActionMapping<Sts>
+type ExtractActions<States extends BaseStates> = GetActionMapping<States>
 
 type Unsubscribe = () => void
 
-type Subscribe<S> = (callback: (state: S) => void) => Unsubscribe
+type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe
 
-type StateMachine<S extends State, A> = {
-	[key in keyof A]: A[key]
+type StateMachine<State extends BaseState, Actions> = {
+	[key in keyof Actions]: Actions[key]
 } & {
-	subscribe: Subscribe<S>
+	subscribe: Subscribe<State>
 }
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
 
-declare const svelteFsm: <Sts extends Readonly<States>, S extends ExtractStates<Sts>>(state: S, states: Sts) => StateMachine<ExtractStates<Sts>, UnionToIntersection<ExtractActions<Sts>>>
+declare const svelteFsm: <Sts extends Readonly<BaseStates>, S extends ExtractStates<Sts>>(state: S, states: Sts) => StateMachine<ExtractStates<Sts>, UnionToIntersection<ExtractActions<Sts>>>
 
 export default svelteFsm

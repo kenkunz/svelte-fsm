@@ -36,7 +36,7 @@ declare type Unsubscribe = () => void
 declare type Subscribe<S> = (callback: (state: S) => void) => Unsubscribe
 
 type StateMachine<S extends State, A> = {
-	[key in keyof A]?: A[key] // TODO: check if actions are really optional
+	[key in keyof A]: A[key]
 } & {
 	subscribe: Subscribe<S>
 }

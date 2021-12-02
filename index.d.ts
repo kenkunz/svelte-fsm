@@ -17,7 +17,9 @@ declare type Actions = {
 	[key: Action]: ActionFunction
 }
 
-declare type ExtractStates<Sts extends States> = Exclude<keyof Sts, number>
+type DetectFallBackState<X extends string | symbol> = X extends '*' ? string : X
+
+declare type ExtractStates<Sts extends States> = DetectFallBackState<Exclude<keyof Sts, number>>
 
 type ExtractObjectValues<A> = A[keyof A]
 

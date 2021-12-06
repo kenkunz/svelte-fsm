@@ -7,7 +7,7 @@ type BaseStates<State extends BaseState = BaseState> = Record<State, BaseActions
 
 type Args = any[]
 
-type LifecycleAction = (arg: { from: BaseState, to: BaseState, event: BaseAction, args: Args }) => void
+type LifecycleAction = (arg: { from: BaseState | null, to: BaseState, event: BaseAction | null, args: Args }) => void
 
 type NoOp = () => void
 
@@ -40,7 +40,7 @@ type Unsubscribe = () => void
 type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe
 
 type StateMachine<State extends BaseState, Actions> = {
-	[key in keyof Actions]: Actions[key] // TODO: include NoOp if action is not present on all states
+	[Key in keyof Actions]: Actions[Key] // TODO: include NoOp if action is not present on all states
 } & {
 	subscribe: Subscribe<State>
 }

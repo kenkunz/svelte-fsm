@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
-import fsm from './index.js';
+import fsm from '../index.js';
 
 sinon.assert.expose(assert, { prefix: '' });
 

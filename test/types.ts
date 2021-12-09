@@ -43,7 +43,7 @@ const valid1 = fsm('off', {
 // @ts-expect-error subscribe expects callback
 valid1.subscribe();
 const unsub = valid1.subscribe(() => {});
-// @ts-expect-error unsubscribe expects no argumernts
+// @ts-expect-error unsubscribe expects no arguments
 unsub('foo');
 unsub();
 
@@ -53,6 +53,10 @@ valid1.noSuchAction();
 // @ts-expect-error toggle expects no arguments (1 provided)
 valid1.toggle(1);
 valid1.toggle();
+
+const toggleResultValid: string | void = valid1.toggle();
+// @ts-expect-error toggle returns string or void
+const toggleResultInvalid: number = valid1.toggle();
 
 // A state machine with fallback state (any initial state permitted)
 const valid2 = fsm('initial', {
@@ -65,15 +69,29 @@ valid2.foo();
 // A state machine with overloaded action signatures
 const valid3 = fsm('initial', {
   '*': {
-    overloaded(one) {}
+    overloaded(one: number) {
+      return 'foo'
+    }
   },
   'foo': {
-    overloaded(one, two) {}
+    overloaded(one: string, two: number) { }
   }
 });
 // @ts-expect-error overloaded expects 1 or 2 args (0 provided)
 valid3.overloaded();
+// @ts-expect-error overloaded expects first argument as number
+valid3.overloaded('string');
 valid3.overloaded(1);
+// @ts-expect-error overloaded expects first argument as string
 valid3.overloaded(1, 2);
+valid3.overloaded('string', 2);
 // @ts-expect-error overloaded expects 1 or 2 args (3 provided)
 valid3.overloaded(1, 2, 3);
+
+// @ts-expect-error overloaded with single argument returns string | void
+const overloadedResult1Invalid: void = valid3.overloaded(1)
+const overloadedResult1Valid: string | void = valid3.overloaded(1)
+
+// @ts-expect-error overloaded with two arguments returns only void
+const overloadedResult2Invalid: string = valid3.overloaded('string', 1)
+const overloadedResult2Valid: string | void = valid3.overloaded('string', 1)

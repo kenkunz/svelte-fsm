@@ -62,7 +62,7 @@ const toggleResultInvalid: number = valid1.toggle();
 const valid2 = fsm('initial', {
   '*': {
     foo: () => {}
-  },
+  }
 });
 valid2.foo();
 
@@ -70,11 +70,11 @@ valid2.foo();
 const valid3 = fsm('initial', {
   '*': {
     overloaded(one: number) {
-      return 'foo'
+      return 'foo';
     }
   },
-  'foo': {
-    overloaded(one: string, two: number) { }
+  foo: {
+    overloaded(one: string, two: number) {}
   }
 });
 // @ts-expect-error overloaded expects 1 or 2 args (0 provided)
@@ -89,9 +89,9 @@ valid3.overloaded('string', 2);
 valid3.overloaded(1, 2, 3);
 
 // @ts-expect-error overloaded with single argument returns string | void
-const overloadedResult1Invalid: void = valid3.overloaded(1)
-const overloadedResult1Valid: string | void = valid3.overloaded(1)
+const overloadedResult1Invalid: void = valid3.overloaded(1);
+const overloadedResult1Valid: string | void = valid3.overloaded(1);
 
 // @ts-expect-error overloaded with two arguments returns only void
-const overloadedResult2Invalid: string = valid3.overloaded('string', 1)
-const overloadedResult2Valid: string | void = valid3.overloaded('string', 1)
+const overloadedResult2Invalid: string = valid3.overloaded('string', 1);
+const overloadedResult2Valid: string | void = valid3.overloaded('string', 1);

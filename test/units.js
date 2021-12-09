@@ -70,13 +70,13 @@ describe('a finite state machine', () => {
     });
 
     it('should call subscribe action handler when invoked with multiple args', () => {
-      const fn = sinon.fake()
+      const fn = sinon.fake();
       machine.subscribe(fn, null);
       assert.calledWithExactly(states.off.subscribe, fn, null);
     });
   });
 
-  describe('event invocations', function() {
+  describe('event invocations', () => {
     let callback;
     let unsubscribe;
 
@@ -145,8 +145,8 @@ describe('a finite state machine', () => {
         from: null,
         to: 'off',
         event: null,
-        args: [] }
-      );
+        args: []
+      });
     });
 
     it('should call lifecycle actions with transition metadata', () => {
@@ -236,7 +236,7 @@ describe('a finite state machine', () => {
       const kick = machine.kick.debounce(100, 1);
       const cancelation = machine.kick.debounce(null);
       clock.tick(100);
-      const state = await Promise.any([ kick, cancelation ]);
+      const state = await Promise.any([kick, cancelation]);
       assert.notCalled(states.off.kick);
       assert.equal('off', state);
     });

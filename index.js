@@ -30,7 +30,7 @@ export default function (state, states = {}) {
 
   function invoke(event, ...args) {
     const newState = dispatch(event, ...args)?.valueOf();
-    if (typeof newState === 'string' && newState !== state) {
+    if (['string', 'symbol'].includes(typeof newState) && newState !== state) {
       transition(newState, event, args);
     }
     return state;

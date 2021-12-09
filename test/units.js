@@ -22,6 +22,7 @@ describe('a finite state machine', () => {
         surge: 'blown',
         kick: sinon.stub(),
         subscribe: sinon.fake(),
+        symbolAction: Symbol.for('the nether'),
         dateAction: new Date(),
         objectAction: {},
         numericAction: 1,
@@ -116,7 +117,13 @@ describe('a finite state machine', () => {
       assert.calledWithExactly(callback, 'on');
     });
 
-    it('should ignore non-string action return values', () => {
+    it('should transition to invoked action symbol value', () => {
+      const newState = machine.symbolAction();
+      assert.equal(Symbol.for('the nether'), newState);
+      assert.calledWithExactly(callback, Symbol.for('the nether'));
+    });
+
+    it('should ignore non-string|symbol action return values', () => {
       assert.equal('off', machine.dateAction());
       assert.equal('off', machine.objectAction());
       assert.equal('off', machine.numericAction());

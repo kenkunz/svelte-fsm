@@ -40,7 +40,7 @@ type Unsubscribe = () => void
 type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe
 
 type StateMachine<State extends BaseState, Actions> = {
-	[Key in keyof Actions]: Actions[Key] // TODO: include NoOp if action is not present on all states
+	[Key in keyof Actions]: Actions[Key] | NoOp
 } & {
 	subscribe: Subscribe<State>
 }

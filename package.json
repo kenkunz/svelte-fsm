@@ -12,7 +12,7 @@
   "scripts": {
     "test": "npm run test:units && npm run test:types",
     "test:units": "mocha",
-    "test:types": "tsc --noEmit test/*.ts"
+    "test:types": "tsc --noEmit --target es6 test/*.ts"
   },
   "engines": {
     "node": ">=14.0.0",

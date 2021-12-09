@@ -13,9 +13,7 @@ type LifecycleAction = (arg: {
   args: Args;
 }) => void;
 
-type NoOp = () => void;
-
-type ActionFunction = BaseState | ((...args: Args) => BaseState) | ((...args: Args) => void) | NoOp;
+type ActionFunction = BaseState | ((...args: Args) => BaseState) | ((...args: Args) => void);
 
 type BaseActions = {
   _enter?: LifecycleAction;
@@ -30,7 +28,7 @@ type ExtractStates<States extends BaseStates> = DetectFallBackState<Exclude<keyo
 type ExtractObjectValues<Object> = Object[keyof Object];
 
 type GetActionFunctionMapping<Actions extends BaseActions> = {
-  [Key in Exclude<keyof Actions, '_enter' | '_exit'>]: Actions[Key] extends string
+  [Key in Exclude<keyof Actions, '_enter' | '_exit'>]: Actions[Key] extends BaseState
     ? () => Actions[Key]
     : Actions[Key];
 };
@@ -46,7 +44,7 @@ type Unsubscribe = () => void;
 type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe;
 
 type StateMachine<State extends BaseState, Actions> = {
-  [Key in keyof Actions]: Actions[Key] | NoOp;
+  [Key in keyof Actions]: Actions[Key];
 } & {
   subscribe: Subscribe<State>;
 };

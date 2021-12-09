@@ -1,6 +1,6 @@
 /*
  * Verify type declarations found in index.d.ts by running:
- * $ npx tsc --noEmit test/types.ts
+ * $ npx tsc --noEmit --target es6 test/types.ts
  */
 import fsm from '../index.js';
 
@@ -54,8 +54,8 @@ valid1.noSuchAction();
 valid1.toggle(1);
 valid1.toggle();
 
-const toggleResultValid: string | void = valid1.toggle();
-// @ts-expect-error toggle returns string or void
+const toggleResultValid: string | symbol = valid1.toggle();
+// @ts-expect-error toggle returns string or symbol
 const toggleResultInvalid: number = valid1.toggle();
 
 // A state machine with fallback state (any initial state permitted)
@@ -95,3 +95,11 @@ const overloadedResult1Valid: string | void = valid3.overloaded(1);
 // @ts-expect-error overloaded with two arguments returns only void
 const overloadedResult2Invalid: string = valid3.overloaded('string', 1);
 const overloadedResult2Valid: string | void = valid3.overloaded('string', 1);
+
+// A state machine that uses symbols as a state keys
+const valid4 = fsm(Symbol.for('foo'), {
+  [Symbol.for('foo')]: {
+    bar: Symbol.for('bar')
+  }
+});
+const symbolResultValid: string | symbol = valid4.bar();

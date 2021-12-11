@@ -1,11 +1,13 @@
 # Svelte FSM
 
+<img alt="Svelte FSM logo" align="right" src="https://user-images.githubusercontent.com/35901/145653445-72717a87-927d-4bcd-b616-aa3eb6f13cd0.png">
+
 A tiny, simple, expressive, pramgmatic [Finite State
 Machine](https://en.wikipedia.org/wiki/Finite-state_machine) (FSM) library, optimized for
 [Svelte](https://svelte.dev).
 * **tiny:** under `1kb` (minified); zero dependencies
 * **simple:** implements core FSM features, not the kitchen sink
-* **expressive:** FSM constructs are mapped to core JavaScript features (see [Usage](#usage) below)
+* **expressive:** FSM constructs are mapped to core JavaScript features (see [Usage Overview](#usage-overview) below)
 * **pragmatic:** prioritizes developer happiness over strict adherance to FSM or Statechart
 formalizations
 * **Svelte-optimized:** implements Svelte's [store
@@ -53,5 +55,10 @@ and `states`
 
 ## Next Steps
 
-* **[Full Documentation](https://github.com/kenkunz/svelte-fsm/wiki)**
-* **[Examples](https://github.com/kenkunz/svelte-fsm/wiki/Examples)**
+<a target="_blank" href="https://youtu.be/3_D-3HPUdEI">
+<img alt="Svelte Summit video" align="right" src="https://user-images.githubusercontent.com/35901/145655001-e0b63ed8-b6cf-4729-b24c-e9b98aa30275.png">
+</a>
+
+* Watch the **[Lightning Talk](https://youtu.be/3_D-3HPUdEI)** from **[Svelte Summit Fall 2021](https://sveltesummit.com/)**
+* Review the **[Full Documentation](https://github.com/kenkunz/svelte-fsm/wiki)**
+* Check out the **[Examples](https://github.com/kenkunz/svelte-fsm/wiki/Examples)**

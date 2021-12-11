@@ -62,3 +62,9 @@ and `states`
 * Watch the **[Lightning Talk](https://youtu.be/3_D-3HPUdEI)** from **[Svelte Summit Fall 2021](https://sveltesummit.com/)**
 * Review the **[Full Documentation](https://github.com/kenkunz/svelte-fsm/wiki)**
 * Check out the **[Examples](https://github.com/kenkunz/svelte-fsm/wiki/Examples)**
+
+<br clear="all">
+
+## Contributors
+
+Credit to **[@ivanhofer](https://github.com/ivanhofer)** for contributing `TypeScript` declarations, resulting in an improved developer experience.

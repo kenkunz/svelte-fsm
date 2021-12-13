@@ -13,7 +13,9 @@ type LifecycleAction = (arg: {
   args: Args;
 }) => void;
 
-type ActionFunction = BaseState | ((...args: Args) => BaseState) | ((...args: Args) => void);
+type AllArgsAction = ((...args: Args) => BaseState)
+
+type ActionFunction = BaseState | AllArgsAction | ((...args: Args) => void);
 
 type BaseActions = {
   _enter?: LifecycleAction;
@@ -44,7 +46,7 @@ type Unsubscribe = () => void;
 type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe;
 
 type StateMachine<State extends BaseState, Actions> = {
-  [Key in keyof Actions]: Actions[Key];
+  [Key in keyof Actions]: Actions[Key] | AllArgsAction;
 } & {
   subscribe: Subscribe<State>;
 };

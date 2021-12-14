@@ -1,5 +1,14 @@
 # svelte-fsm changelog
 
+## 1.1.2
+
+- formatting tweaks
+
+## 1.1.1
+
+- **[fix]** allow any event arguments if action types unspecified ([#5](https://github.com/kenkunz/svelte-fsm/pull/5) - closes [#4](https://github.com/kenkunz/svelte-fsm/issues/4))
+- **[fix]** expect event invocations to always returns State (string | symbol) ([#5](https://github.com/kenkunz/svelte-fsm/pull/5))
+
 ## 1.1.0
 
 - **[feat]** improve TypeScript declarations ([#1](https://github.com/kenkunz/svelte-fsm/pull/1))

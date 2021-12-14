@@ -50,9 +50,11 @@ unsub();
 // @ts-expect-error state machine expects valid event invocation
 valid1.noSuchAction();
 
-// @ts-expect-error toggle expects no arguments (1 provided)
-valid1.toggle(1);
+// can pass any argument if action get's never typed
 valid1.toggle();
+valid1.toggle(1);
+valid1.toggle(true, 1);
+valid1.toggle("test", true, 1);
 
 const toggleResultValid: string | symbol = valid1.toggle();
 // @ts-expect-error toggle returns string or symbol
@@ -88,13 +90,13 @@ valid3.overloaded('string', 2);
 // @ts-expect-error overloaded expects 1 or 2 args (3 provided)
 valid3.overloaded(1, 2, 3);
 
-// @ts-expect-error overloaded with single argument returns string | void
+// @ts-expect-error overloaded with single argument returns string | symbol
 const overloadedResult1Invalid: void = valid3.overloaded(1);
-const overloadedResult1Valid: string | void = valid3.overloaded(1);
+const overloadedResult1Valid: string | symbol = valid3.overloaded(1);
 
-// @ts-expect-error overloaded with two arguments returns only void
-const overloadedResult2Invalid: string = valid3.overloaded('string', 1);
-const overloadedResult2Valid: string | void = valid3.overloaded('string', 1);
+// @ts-expect-error overloaded with two arguments returns string | symbol
+const overloadedResult2Invalid: void = valid3.overloaded('string', 1);
+const overloadedResult2Valid: string | symbol = valid3.overloaded('string', 1);
 
 // A state machine that uses symbols as a state keys
 const valid4 = fsm(Symbol.for('foo'), {

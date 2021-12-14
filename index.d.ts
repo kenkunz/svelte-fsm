@@ -13,7 +13,11 @@ type LifecycleAction = (arg: {
   args: Args;
 }) => void;
 
-type ActionFunction = BaseState | ((...args: Args) => BaseState) | ((...args: Args) => void);
+type AllArgsAction = ((...args: Args) => BaseState)
+
+type VoidFunction = ((...args: Args) => void)
+
+type ActionFunction = BaseState | AllArgsAction | VoidFunction;
 
 type BaseActions = {
   _enter?: LifecycleAction;
@@ -29,8 +33,8 @@ type ExtractObjectValues<Object> = Object[keyof Object];
 
 type GetActionFunctionMapping<Actions extends BaseActions> = {
   [Key in Exclude<keyof Actions, '_enter' | '_exit'>]: Actions[Key] extends BaseState
-    ? () => Actions[Key]
-    : Actions[Key];
+    ? () => Actions[Key] extends void ? BaseState : Actions[Key]
+    : Actions[Key] extends VoidFunction ? ((...args: Parameters<Actions[Key]>) => BaseState) : Actions[Key]
 };
 
 type GetActionMapping<States extends BaseStates> = ExtractObjectValues<{
@@ -44,7 +48,7 @@ type Unsubscribe = () => void;
 type Subscribe<S extends BaseState> = (callback: (state: S) => void) => Unsubscribe;
 
 type StateMachine<State extends BaseState, Actions> = {
-  [Key in keyof Actions]: Actions[Key];
+  [Key in keyof Actions]: Actions[Key] | AllArgsAction;
 } & {
   subscribe: Subscribe<State>;
 };

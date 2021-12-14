@@ -54,7 +54,7 @@ valid1.noSuchAction();
 valid1.toggle();
 valid1.toggle(1);
 valid1.toggle(true, 1);
-valid1.toggle("test", true, 1);
+valid1.toggle('test', true, 1);
 
 const toggleResultValid: string | symbol = valid1.toggle();
 // @ts-expect-error toggle returns string or symbol

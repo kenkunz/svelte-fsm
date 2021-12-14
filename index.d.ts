@@ -15,7 +15,9 @@ type LifecycleAction = (arg: {
 
 type AllArgsAction = ((...args: Args) => BaseState)
 
-type ActionFunction = BaseState | AllArgsAction | ((...args: Args) => void);
+type VoidFunction = ((...args: Args) => void)
+
+type ActionFunction = BaseState | AllArgsAction | VoidFunction;
 
 type BaseActions = {
   _enter?: LifecycleAction;
@@ -31,8 +33,8 @@ type ExtractObjectValues<Object> = Object[keyof Object];
 
 type GetActionFunctionMapping<Actions extends BaseActions> = {
   [Key in Exclude<keyof Actions, '_enter' | '_exit'>]: Actions[Key] extends BaseState
-    ? () => Actions[Key]
-    : Actions[Key];
+    ? () => Actions[Key] extends void ? BaseState : Actions[Key]
+    : Actions[Key] extends VoidFunction ? ((...args: Parameters<Actions[Key]>) => BaseState) : Actions[Key]
 };
 
 type GetActionMapping<States extends BaseStates> = ExtractObjectValues<{

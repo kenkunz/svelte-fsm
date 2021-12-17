@@ -46,10 +46,10 @@ language features, resulting in a highly expressive API that's effortless to rem
 write, and natural to read.
 * an **fsm** is defined by calling the default export `fsm()` function with 2 arguments: `initial`
 and `states`
-* **states** are just top-level object keys
-* **events** are invoked as function calls, and are defined as simple properties or functions
-* **transitions** are just property values or function return values
-* **actions** are just functions
+* **states** is just an object consisting of nested `state` objects, which consist of…
+  * **transitions** – property values or action return values that match another `state`
+  * **actions** – functions that optionally transition (return a `state`)
+* **events** are invoked on a state machine as function calls, returning the resulting state
 * **timers** (often used in state machines) are available by calling `.debounce(wait)` on any event
 * **context** is just… *context* (i.e., the lexical scope of your fsm)
 

@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
+import { inspect } from 'util';
 import fsm from '../index.js';
 
 sinon.assert.expose(assert, { prefix: '' });
@@ -243,8 +244,9 @@ describe('a finite state machine', () => {
       const kick = machine.kick.debounce(100, 1);
       const cancelation = machine.kick.debounce(null);
       clock.tick(100);
-      const state = await Promise.any([kick, cancelation]);
+      const state = await cancelation;
       assert.notCalled(states.off.kick);
+      assert.include(inspect(kick), '<pending>');
       assert.equal('off', state);
     });
   });

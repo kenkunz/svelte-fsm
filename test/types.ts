@@ -42,6 +42,9 @@ const valid1 = fsm('off', {
 
 // @ts-expect-error subscribe expects callback
 valid1.subscribe();
+// @ts-expect-error subscribe expects callback
+valid1.subscribe('foo');
+
 const unsub = valid1.subscribe(() => {});
 // @ts-expect-error unsubscribe expects no arguments
 unsub('foo');

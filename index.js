@@ -10,8 +10,8 @@ export default function (state, states = {}) {
   let proxy;
 
   function subscribe(callback) {
-    if (typeof callback !== 'function') {
-      throw new TypeError("Invalid callback");
+    if (!(callback instanceof Function)) {
+      throw new TypeError('callback is not a function');
     }
     subscribers.add(callback);
     callback(state);
@@ -64,8 +64,6 @@ export default function (state, states = {}) {
    * - return a proxy object with single native subscribe method
    * - all other properties act as dynamic event invocation methods
    * - event invokers also respond to .debounce(wait, ...args) (see above)
-   * - subscribe() also behaves as an event invoker when called with any args other than a
-   *   single callback (or when debounced)
    */
   proxy = new Proxy({ subscribe }, {
     get(target, property) {

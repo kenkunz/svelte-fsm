@@ -61,22 +61,19 @@ describe('a finite state machine', () => {
       unsubscribe();
     });
 
-    it('should fail subscribe action handler when invoked with no args', () => {
-      assert.throws(() => {
-        machine.subscribe();
-      }, TypeError);
+    it('should throw TypeError when invoked with no args', () => {
+      assert.throws(machine.subscribe, TypeError);
     });
 
-    it('should call subscribe action handler when invoked with single non-function arg', () => {
+    it('should throw TypeError when invoked with non-function arg', () => {
       assert.throws(() => {
         machine.subscribe('not a function');
       }, TypeError);
     });
 
     it('should not call subscribe action handler when invoked with multiple args', () => {
-      const fn = sinon.fake();
-      machine.subscribe(fn, null);
-      assert.neverCalledWith(states.off.subscribe, fn, null);
+      machine.subscribe(sinon.fake(), null);
+      assert.notCalled(states.off.subscribe);
     });
   });
 

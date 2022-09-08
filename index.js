@@ -10,6 +10,9 @@ export default function (state, states = {}) {
   let proxy;
 
   function subscribe(callback) {
+    if (typeof callback !== 'function') {
+      throw new TypeError("Invalid callback");
+    }
     subscribers.add(callback);
     callback(state);
     return () => subscribers.delete(callback);
@@ -64,17 +67,7 @@ export default function (state, states = {}) {
    * - subscribe() also behaves as an event invoker when called with any args other than a
    *   single callback (or when debounced)
    */
-  function subscribeOrInvoke(...args) {
-    if (args.length === 1 && args[0] instanceof Function) {
-      return subscribe(args[0]);
-    } else {
-      invoke('subscribe', ...args);
-    }
-  }
-
-  subscribeOrInvoke.debounce = debounce.bind(null, 'subscribe');
-
-  proxy = new Proxy({ subscribe: subscribeOrInvoke }, {
+  proxy = new Proxy({ subscribe }, {
     get(target, property) {
       if (!Reflect.has(target, property)) {
         target[property] = invoke.bind(null, property);

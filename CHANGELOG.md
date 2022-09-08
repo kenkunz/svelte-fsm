@@ -1,5 +1,9 @@
 # svelte-fsm changelog
 
+## 1.2.0
+
+- **[fix]** prevent `subscribe` from invoking action ([#9](https://github.com/kenkunz/svelte-fsm/pull/9) - closes [#8](https://github.com/kenkunz/svelte-fsm/issues/8))
+
 ## 1.1.2
 
 - formatting tweaks

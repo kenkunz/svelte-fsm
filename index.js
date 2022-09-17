@@ -18,24 +18,44 @@ export default function (state, states = {}) {
     return () => subscribers.delete(callback);
   }
 
-  function transition(newState, event, args) {
-    const metadata = { from: state, to: newState, event, args };
-    dispatch('_exit', metadata);
-    state = newState;
-    subscribers.forEach((callback) => callback(state));
-    dispatch('_enter', metadata);
+  function notifySubscribers(previous) {
+    if (state !== previous) {
+      subscribers.forEach((callback) => callback(state));
+    }
+  }
+
+  function validState(val) {
+    return ['string', 'symbol'].includes(typeof val);
+  }
+
+  function transition(metadata) {
+    let { to, from } = metadata;
+    if (!validState(to) || to === from[from.length - 1]) return false;
+
+    to = dispatch('_exit', metadata);
+    if (validState(to)) metadata.to = to;
+
+    state = metadata.to;
+
+    to = dispatch('_enter', metadata);
+    if (transition({ ...metadata, from: [...from, state], to })) return;
+
+    notifySubscribers(metadata.from[0]);
+
+    return true;
   }
 
   function dispatch(event, ...args) {
-    const action = states[state]?.[event] ?? states['*']?.[event];
-    return action instanceof Function ? action.apply(proxy, args) : action;
+    let action = states[state]?.[event] ?? states['*']?.[event];
+    if (action instanceof Function) {
+      action = action.apply(proxy, args);
+    }
+    return action?.valueOf();
   }
 
   function invoke(event, ...args) {
-    const newState = dispatch(event, ...args)?.valueOf();
-    if (['string', 'symbol'].includes(typeof newState) && newState !== state) {
-      transition(newState, event, args);
-    }
+    const to = dispatch(event, ...args);
+    transition({ from: [state], to, event, args });
     return state;
   }
 
@@ -78,6 +98,6 @@ export default function (state, states = {}) {
   /*
    * `_enter` initial state and return the proxy object
    */
-  dispatch('_enter', { from: null, to: state, event: null, args: [] });
+  dispatch('_enter', { from: [null], to: state, event: null, args: [] });
   return proxy;
 }

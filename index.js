@@ -18,24 +18,14 @@ export default function (state, states = {}) {
     return () => subscribers.delete(callback);
   }
 
-  function notifySubscribers(previous) {
-    if (state !== previous) {
-      subscribers.forEach((callback) => callback(state));
+  function transition({ from, to, event, args }) {
+    state = dispatch('_exit', { from, to, event, args }) ?? to;
+    if (state !== from.at(-1)) from.push(state);
+    to = dispatch('_enter', { from, to: state, event, args });
+    if (to !== undefined && to !== state) {
+      return transition({ from, to, event, args });
     }
-  }
-
-  function transition(metadata) {
-    let { to, from } = metadata;
-    if (to === undefined || to === from[from.length - 1]) return false;
-
-    state = dispatch('_exit', metadata) ?? to;
-    from.push(state);
-    to = dispatch('_enter', { ...metadata, to: state });
-    if (transition({ ...metadata, from, to })) return;
-
-    notifySubscribers(metadata.from[0]);
-
-    return true;
+    return from;
   }
 
   function dispatch(event, ...args) {
@@ -50,7 +40,12 @@ export default function (state, states = {}) {
 
   function invoke(event, ...args) {
     const to = dispatch(event, ...args);
-    transition({ from: [state], to, event, args });
+    if (to !== undefined && to !== state) {
+      const transitions = transition({ from: [state], to, event, args });
+      if (transitions[0] !== transitions.at(-1)) {
+        subscribers.forEach((callback) => callback(state));
+      }
+    }
     return state;
   }
 

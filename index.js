@@ -19,12 +19,10 @@ export default function (state, states = {}) {
   }
 
   function transition({ from, to, ...rest }) {
+    if (to === undefined) return [from[0], state];
     state = dispatch('_exit', { from, to, ...rest }) ?? to;
     to = dispatch('_enter', { from, to: state, ...rest });
-    if (to !== undefined) {
-      return transition({ from: [...from, state], to, ...rest });
-    }
-    return [ from[0], state ];
+    return transition({ from: [...from, state], to, ...rest });
   }
 
   function dispatch(event, ...args) {
@@ -39,11 +37,9 @@ export default function (state, states = {}) {
 
   function invoke(event, ...args) {
     const to = dispatch(event, ...args);
-    if (to !== undefined) {
-      const [ beginState, endState ] = transition({ from: [state], to, event, args });
-      if (beginState !== endState) {
-        subscribers.forEach((callback) => callback(state));
-      }
+    const [ beginState, endState ] = transition({ from: [state], to, event, args });
+    if (beginState !== endState) {
+      subscribers.forEach((callback) => callback(state));
     }
     return state;
   }

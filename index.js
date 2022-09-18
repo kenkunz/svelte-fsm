@@ -18,12 +18,12 @@ export default function (state, states = {}) {
     return () => subscribers.delete(callback);
   }
 
-  function transition({ from, to, event, args }) {
-    state = dispatch('_exit', { from, to, event, args }) ?? to;
+  function transition({ from, to, ...rest }) {
+    state = dispatch('_exit', { from, to, ...rest }) ?? to;
     if (state !== from.at(-1)) from.push(state);
-    to = dispatch('_enter', { from, to: state, event, args });
+    to = dispatch('_enter', { from, to: state, ...rest });
     if (to !== undefined && to !== state) {
-      return transition({ from, to, event, args });
+      return transition({ from, to, ...rest });
     }
     return from;
   }

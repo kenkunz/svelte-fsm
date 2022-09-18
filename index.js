@@ -24,21 +24,14 @@ export default function (state, states = {}) {
     }
   }
 
-  function validState(val) {
-    return ['string', 'symbol'].includes(typeof val);
-  }
-
   function transition(metadata) {
     let { to, from } = metadata;
-    if (!validState(to) || to === from[from.length - 1]) return false;
+    if (to === undefined || to === from[from.length - 1]) return false;
 
-    to = dispatch('_exit', metadata);
-    if (validState(to)) metadata.to = to;
-
-    state = metadata.to;
-
-    to = dispatch('_enter', metadata);
-    if (transition({ ...metadata, from: [...from, state], to })) return;
+    state = dispatch('_exit', metadata) ?? to;
+    from.push(state);
+    to = dispatch('_enter', { ...metadata, to: state });
+    if (transition({ ...metadata, from, to })) return;
 
     notifySubscribers(metadata.from[0]);
 
@@ -47,10 +40,12 @@ export default function (state, states = {}) {
 
   function dispatch(event, ...args) {
     let action = states[state]?.[event] ?? states['*']?.[event];
-    if (action instanceof Function) {
-      action = action.apply(proxy, args);
+    if (action instanceof Function) action = action.apply(proxy, args);
+    action = action?.valueOf();
+    if (!['undefined', 'string', 'symbol'].includes(typeof action)) {
+      throw new TypeError('action must return a string, symbol, or undefined');
     }
-    return action?.valueOf();
+    return action;
   }
 
   function invoke(event, ...args) {

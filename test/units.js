@@ -123,11 +123,11 @@ describe('a finite state machine', () => {
       assert.calledWithExactly(callback, Symbol.for('the nether'));
     });
 
-    it('should ignore non-string|symbol action return values', () => {
-      assert.equal('off', machine.dateAction());
-      assert.equal('off', machine.objectAction());
-      assert.equal('off', machine.numericAction());
-      assert.equal('off', machine.asyncAction());
+    it('should throw exception when action returns non-string|symbol value', () => {
+      assert.throws(machine.dateAction, TypeError);
+      assert.throws(machine.objectAction, TypeError);
+      assert.throws(machine.numericAction, TypeError);
+      assert.throws(machine.asyncAction, TypeError);
     });
 
     it('should invoke action with correct `this` binding and arguments', () => {
@@ -142,14 +142,13 @@ describe('a finite state machine', () => {
 
     it('should call lifecycle actions in proper sequence', () => {
       machine.toggle();
-      assert.isTrue(states.off._enter.calledBefore(states.off._exit));
-      assert.isTrue(states.off._exit.calledBefore(callback));
-      assert.isTrue(callback.calledBefore(states.on._enter));
+      assert.isTrue(states.off._exit.calledBefore(states.on._enter));
+      assert.isTrue(states.on._enter.calledBefore(callback));
     });
 
     it('should call _enter with appropirate metadata when fsm is created', () => {
       assert.calledWithExactly(states.off._enter, {
-        from: null,
+        from: [null],
         to: 'off',
         event: null,
         args: []
@@ -158,7 +157,7 @@ describe('a finite state machine', () => {
 
     it('should call lifecycle actions with transition metadata', () => {
       const expected = {
-        from: 'off',
+        from: ['off'],
         to: 'on',
         event: 'toggle',
         args: [1, 'foo']
